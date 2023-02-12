@@ -954,5 +954,6 @@ void CpuImpl::rst(u8 vector)
 {
     // RST - Reset (jump to reset vector)
     auto& pc = registers.getPc();
+    pushIntoStack16(pc);
     pc = vector;
 }
