@@ -34,8 +34,29 @@ bool CpuImpl::interruptsEnabled()
     return interrupt_enable;
 }
 
+void CpuImpl::step()
+{
+    if(interrupt_pending && interrupt_enable && !interrupt_delay) 
+    {
+        interrupt_pending = false;
+        interrupt_enable = false;
+        halted = false;
+
+        executeInstruction(interrupt_source);
+    } 
+    else if(!halted) 
+    {
+        u8 opcode = fetchOpcode();
+        executeInstruction(opcode);
+    }
+}
+
 void CpuImpl::executeInstruction(u8 opcode)
 {
+    if(interrupt_delay) {
+        interrupt_delay = false;
+    }
+
     // Extracting bitfields from opcode in following format
     // 
     // |xx|yy y|zzz|
@@ -62,6 +83,12 @@ void CpuImpl::executeInstruction(u8 opcode)
             executeFourthGroupInstruction(y, z, p, q);
             break;
     }
+}
+
+void CpuImpl::interrupt(u8 interrupt_source) 
+{
+    this->interrupt_pending = true;
+    this->interrupt_source = interrupt_source;
 }
 
 void CpuImpl::executeFirstGroupInstruction(u8 y, u8 z, u8 p, u8 q)
@@ -786,6 +813,7 @@ void CpuImpl::ei()
 {
     // EI - Enable Interrupts
     interrupt_enable = true;
+    interrupt_delay = true;
 }
 
 void CpuImpl::di()

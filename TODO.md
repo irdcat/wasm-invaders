@@ -1,8 +1,9 @@
 # TODO List
 
 - [x] RST should push current PC onto stack before jumping to the interrupt vector (this instruction is basically CALL but to a fixed memory location)
-- [ ] Implement proper interrupt handling logic
+- [x] Implement proper interrupt handling logic
 - [ ] Implement bus along with the peripherials
+- [ ] Store non-immedate operands references and conditions in arrays to optimize operand decoding
 
 ## Interrupt handling
 

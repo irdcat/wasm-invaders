@@ -21,10 +21,17 @@ class CpuImpl : public Cpu
 
         bool interruptsEnabled() override;
 
+        void step() override;
+
         void executeInstruction(u8 opcode) override;
+
+        void interrupt(u8 interrupt_source) override;
 
     private:
         bool interrupt_enable;
+        bool interrupt_pending;
+        bool interrupt_delay;
+        bool interrupt_source;
         bool halted;
         Registers registers;
         std::shared_ptr<Bus> bus;
