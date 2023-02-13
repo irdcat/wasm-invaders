@@ -17,10 +17,6 @@ class CpuImpl : public Cpu
 
         Registers& getRegisters() override;
 
-        bool isHalted() override;
-
-        bool interruptsEnabled() override;
-
         void step() override;
 
         void executeInstruction(u8 opcode) override;

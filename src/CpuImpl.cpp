@@ -24,16 +24,6 @@ Registers& CpuImpl::getRegisters()
     return registers;
 }
 
-bool CpuImpl::isHalted()
-{
-    return halted;
-}
-
-bool CpuImpl::interruptsEnabled()
-{
-    return interrupt_enable;
-}
-
 void CpuImpl::step()
 {
     if(interrupt_pending && interrupt_enable && !interrupt_delay) 
