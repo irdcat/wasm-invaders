@@ -20,6 +20,7 @@ class MemoryImpl : public Memory
         static constexpr const unsigned ROM_START_ADDR = 0x0000;
         static constexpr const unsigned RAM_START_ADDR = 0x2000;
         static constexpr const unsigned VRAM_START_ADDR = 0x2400;
+        static constexpr const unsigned RAM_MIRROR_START_ADDR = 0x4000;
 
         std::array<u8, ROM_SIZE> rom;
         std::array<u8, RAM_SIZE> ram;

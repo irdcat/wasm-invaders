@@ -2,12 +2,18 @@
 
 #include <memory>
 #include "Bus.hpp"
+#include "Apu.hpp"
 #include "Memory.hpp"
+#include "Inputs.hpp"
+#include "ShiftRegister.hpp"
 
 class BusImpl : public Bus
 {
     public:
-        BusImpl(const std::shared_ptr<Memory>& memoryPtr);
+        BusImpl(const std::shared_ptr<Memory>& memoryPtr,
+                const std::shared_ptr<Inputs>& inputsPtr, 
+                const std::shared_ptr<Apu>& apuPtr,
+                const std::shared_ptr<ShiftRegister>& shiftRegisterPtr);
 
         ~BusImpl() = default;
 
@@ -23,4 +29,7 @@ class BusImpl : public Bus
 
     private:
         std::shared_ptr<Memory> memory;
+        std::shared_ptr<Inputs> inputs;
+        std::shared_ptr<Apu> apu;
+        std::shared_ptr<ShiftRegister> shiftRegister;
 };
