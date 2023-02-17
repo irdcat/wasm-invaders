@@ -39,22 +39,21 @@ Emulator::~Emulator()
 
 void Emulator::run()
 {
-    auto currentTime = std::chrono::steady_clock::now();
-    auto lastTime = currentTime;
+    uint32_t currentTime = 0;
+    uint32_t lastTime = 0;
+    uint32_t deltaTime = 0;
     while(shouldRun)
     {
-        currentTime = std::chrono::steady_clock::now();
-        auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime);
+        currentTime = SDL_GetTicks();
+        deltaTime = currentTime - lastTime;
 
         handleInput();
         update(deltaTime);
         render();
 
-        #ifdef __EMSCRIPTEN__
         emscripten_sleep(0);
-        #endif
 
-        lastTime = std::chrono::steady_clock::now();
+        lastTime = currentTime;
     }
 }
 
@@ -133,15 +132,60 @@ void Emulator::loadRoms()
 
 void Emulator::handleInput()
 {
-
+    static SDL_Event event;
+    while(SDL_PollEvent(&event) != 0)
+    {
+        if (event.type == SDL_QUIT)
+            shouldRun = false;
+        else if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
+            handleKeyEvent(event);
+    }
 }
 
-void Emulator::update(std::chrono::milliseconds dt)
+void Emulator::update(uint32_t dt)
 {
-
+    // TODO: Update buffer and emulated environment
 }
 
 void Emulator::render()
 {
-    
+    // TODO: Rendering
+}
+
+void Emulator::handleKeyEvent(SDL_Event &event)
+{
+    auto key = event.key.keysym.scancode;
+    auto pressed = event.type == SDL_KEYDOWN;
+    switch (key)
+    {
+        case SDL_SCANCODE_C:
+            inputs->setCredit(pressed);
+            break;
+        case SDL_SCANCODE_1:
+            inputs->setP1Start(pressed);
+            break;
+        case SDL_SCANCODE_2:
+            inputs->setP2Start(pressed);
+            break;
+        case SDL_SCANCODE_A:
+            inputs->setP1Left(pressed);
+            break;
+        case SDL_SCANCODE_D:
+            inputs->setP1Right(pressed);
+            break;
+        case SDL_SCANCODE_W:
+            inputs->setP1Shoot(pressed);
+            break;
+        case SDL_SCANCODE_LEFT:
+            inputs->setP2Left(pressed);
+            break;
+        case SDL_SCANCODE_RIGHT:
+            inputs->setP2Right(pressed);
+            break;
+        case SDL_SCANCODE_UP:
+            inputs->setP2Shoot(pressed);
+            break;
+        default:
+            break;
+    }
 }

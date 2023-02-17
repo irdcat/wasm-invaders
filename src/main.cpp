@@ -1,8 +1,8 @@
 #include "Emulator.hpp"
 
 #include <iostream>
+#include <stdexcept>
 #include <SDL2/SDL.h>
-#include <emscripten.h>
 
 int main()
 {

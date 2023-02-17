@@ -25,8 +25,10 @@ class Emulator
         void loadRoms();
 
         void handleInput();
-        void update(std::chrono::milliseconds ms);
+        void update(uint32_t ms);
         void render();
+
+        void handleKeyEvent(SDL_Event &event);
 
         bool shouldRun;
 

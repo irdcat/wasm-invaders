@@ -11,6 +11,10 @@ class Cpu
 
         virtual Registers& getRegisters() = 0;
 
+        virtual unsigned cycleCount() = 0;
+
+        virtual void resetCycleCount() = 0;
+
         virtual void step() = 0;
 
         virtual void executeInstruction(u8 opcode) = 0;

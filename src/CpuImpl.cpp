@@ -6,6 +6,7 @@ CpuImpl::CpuImpl(const std::shared_ptr<Bus>& busPtr)
     , bus(busPtr)
     , interrupt_enable(false)
     , halted(false)
+    , cycles(0)
 {
     auto& rawFlags = registers.getAf().getLow().raw;
     rawFlags = 0x2; // Set bit between Carry and Parity to 1
@@ -22,6 +23,16 @@ u8 CpuImpl::fetchOpcode()
 Registers& CpuImpl::getRegisters()
 {
     return registers;
+}
+
+unsigned CpuImpl::cycleCount()
+{
+    return cycles;
+}
+
+void CpuImpl::resetCycleCount()
+{
+    cycles = 0;
 }
 
 void CpuImpl::step()

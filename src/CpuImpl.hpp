@@ -17,6 +17,10 @@ class CpuImpl : public Cpu
 
         Registers& getRegisters() override;
 
+        unsigned cycleCount() override;
+
+        void resetCycleCount() override;
+
         void step() override;
 
         void executeInstruction(u8 opcode) override;
@@ -29,6 +33,7 @@ class CpuImpl : public Cpu
         bool interrupt_delay;
         bool interrupt_source;
         bool halted;
+        unsigned cycles;
         Registers registers;
         std::shared_ptr<Bus> bus;
 
