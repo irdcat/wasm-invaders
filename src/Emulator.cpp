@@ -90,7 +90,7 @@ void Emulator::initializeSdlResources()
         SDL_CreateTexture,
         SDL_DestroyTexture,
         renderer,
-        SDL_PIXELFORMAT_ARGB32,
+        SDL_PIXELFORMAT_RGBA32,
         SDL_TEXTUREACCESS_STREAMING,
         DISPLAY_WIDTH,
         DISPLAY_HEIGHT
@@ -144,12 +144,78 @@ void Emulator::handleInput()
 
 void Emulator::update(uint32_t dt)
 {
-    // TODO: Update buffer and emulated environment
+    static const u8 RST_10 = 0xD7;
+    static const u8 RST_8 = 0xCF;
+    static u8 currentInterrupt = RST_8;
+    unsigned cycleCount = 0;
+    while(cycleCount < dt * CYCLES_PER_SECOND / 1000)
+    {
+        cycleCount += cpu->step();
+        if(cpu->cycleCount() >= CYCLES_PER_FRAME / 2)
+        {
+            cpu->subtractFromCycleCount(CYCLES_PER_FRAME / 2);
+            cpu->interrupt(currentInterrupt);
+            if(currentInterrupt == RST_10)
+            {
+                auto vram = memory->getVRam();
+                uint32_t* renderBuffer = nullptr;
+                int pitch = 0;
+                SDL_LockTexture(texture.get(), nullptr, reinterpret_cast<void**>(&renderBuffer), &pitch);
+                for(unsigned byte = 0; byte < vram.size(); byte++)
+                {
+                    const unsigned y = (byte * 8) / DISPLAY_HEIGHT;
+                    const unsigned x = (byte * 8) % DISPLAY_HEIGHT;
+                    auto data = vram[byte];
+                    for(unsigned bit = 0; bit < 8; bit++)
+                    {
+                        uint32_t color = 0x000000FF;
+                        unsigned px = x + bit;
+                        unsigned py = y;
+                        if((data >> bit) & 1)
+                        {
+                            if(px < 16)
+                            {
+                                if(py < 16 || py > 134)
+                                {
+                                    color |= 0xFFFFFF00;
+                                }
+                                else
+                                {
+                                    color |= 0x00FF0000;
+                                }
+                            }
+                            else if(px >= 16 && px <= 72)
+                            {
+                                color |= 0x00FF0000;
+                            }
+                            else if(px >= 192 && px < 224)
+                            {
+                                color |= 0xFF000000;
+                            }
+                            else
+                            {
+                                color |= 0xFFFFFF00;
+                            }
+                        }
+
+                        const unsigned renderBufferX = py;
+                        const unsigned renderBufferY = -px + DISPLAY_HEIGHT - 1;
+                        const unsigned renderBufferIndex = renderBufferX * DISPLAY_HEIGHT + renderBufferY;
+                        renderBuffer[renderBufferIndex] = color; 
+                    }
+                }
+            }
+            SDL_UnlockTexture(texture.get());
+            currentInterrupt = currentInterrupt == RST_8 ? RST_10 : RST_8;
+        }
+    }
 }
 
 void Emulator::render()
 {
-    // TODO: Rendering
+    SDL_RenderClear(renderer.get());
+    SDL_RenderCopy(renderer.get(), texture.get(), nullptr, nullptr);
+    SDL_RenderPresent(renderer.get());
 }
 
 void Emulator::handleKeyEvent(SDL_Event &event)
@@ -184,6 +250,13 @@ void Emulator::handleKeyEvent(SDL_Event &event)
             break;
         case SDL_SCANCODE_UP:
             inputs->setP2Shoot(pressed);
+            break;
+        case SDL_SCANCODE_ESCAPE:
+            {
+                SDL_Event e;
+                e.type = SDL_QUIT;
+                SDL_PushEvent(&e);
+            }
             break;
         default:
             break;

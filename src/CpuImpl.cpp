@@ -30,12 +30,16 @@ unsigned CpuImpl::cycleCount()
     return cycles;
 }
 
-void CpuImpl::resetCycleCount()
+void CpuImpl::subtractFromCycleCount(unsigned value)
 {
-    cycles = 0;
+    if(value > cycles)
+    {
+        value = cycles;
+    }
+    cycles -= value;
 }
 
-void CpuImpl::step()
+unsigned CpuImpl::step()
 {
     if(interrupt_pending && interrupt_enable && !interrupt_delay) 
     {
@@ -43,17 +47,18 @@ void CpuImpl::step()
         interrupt_enable = false;
         halted = false;
 
-        executeInstruction(interrupt_source);
+        return executeInstruction(interrupt_source);
     } 
     else if(!halted) 
     {
         u8 opcode = fetchOpcode();
-        executeInstruction(opcode);
+        return executeInstruction(opcode);
     }
 }
 
-void CpuImpl::executeInstruction(u8 opcode)
+unsigned CpuImpl::executeInstruction(u8 opcode)
 {
+    auto cyclesBeforeInstruction = cycles;
     if(interrupt_delay) {
         interrupt_delay = false;
     }
@@ -84,6 +89,7 @@ void CpuImpl::executeInstruction(u8 opcode)
             executeFourthGroupInstruction(y, z, p, q);
             break;
     }
+    return cycles - cyclesBeforeInstruction;
 }
 
 void CpuImpl::interrupt(u8 interrupt_source) 
@@ -150,18 +156,18 @@ void CpuImpl::executeFirstGroupInstruction(u8 y, u8 z, u8 p, u8 q)
     else if (z == 4)
     {
         u8& reg = resolveRegister(y);
-        inr(reg);
+        inr(reg, y == 6);
     }
     else if (z == 5)
     {
         u8& reg = resolveRegister(y);
-        dcr(reg);
+        dcr(reg, y == 6);
     }
     else if (z == 6)
     {
         u8& reg = resolveRegister(y);
         u8 immedate = fetchImmedate8();
-        mvi(reg, immedate);
+        mvi(reg, immedate, y == 6);
     }
     else
     {
@@ -195,7 +201,7 @@ void CpuImpl::executeSecondGroupInstruction(u8 y, u8 z)
     {
         u8& destination = resolveRegister(y);
         u8& source = resolveRegister(z);
-        mov(destination, source);
+        mov(destination, source, y == 6 || z == 6);
     }
 }
 
@@ -205,21 +211,21 @@ void CpuImpl::executeThirdGroupInstruction(u8 y, u8 z)
     u8& reg = resolveRegister(z);
 
     if (y == 0)
-        add(reg);
+        add(reg, z == 6);
     else if (y == 1)
-        adc(reg);
+        adc(reg, z == 6);
     else if (y == 2)
-        sub(reg);
+        sub(reg, z == 6);
     else if (y == 3)
-        sbb(reg);
+        sbb(reg, z == 6);
     else if (y == 4)
-        ana(reg);
+        ana(reg, z == 6);
     else if (y == 5)
-        xra(reg);
+        xra(reg, z == 6);
     else if (y == 6)
-        ora(reg);
+        ora(reg, z == 6);
     else
-        cmp(reg);
+        cmp(reg, z == 6);
 }
 
 void CpuImpl::executeFourthGroupInstruction(u8 y, u8 z, u8 p, u8 q)
@@ -483,13 +489,14 @@ bool CpuImpl::checkParity(u8 value)
 void CpuImpl::nop()
 {
     // NOP - No Operation
-    // Left as a method for possible future implementation of CPU clock
+    cycles += 4;
 }
 
 void CpuImpl::lxi(u16& reg, u16 immedate)
 {
     // LXI - Load Extended Immedate
     reg = immedate;
+    cycles += 10;
 }
 
 void CpuImpl::dad(u16& reg)
@@ -500,6 +507,7 @@ void CpuImpl::dad(u16& reg)
     unsigned result = hl + reg;
     flags.C = result >> 16;
     hl = result & 0xFFFF;
+    cycles += 10;
 }
 
 void CpuImpl::stax(u16& reg)
@@ -508,6 +516,7 @@ void CpuImpl::stax(u16& reg)
     u16 addr = reg;
     auto& accumulator = registers.getAf().getHigh();
     bus->writeIntoMemory(addr, accumulator);
+    cycles += 7;
 }
 
 void CpuImpl::shld(u16 addr)
@@ -516,6 +525,7 @@ void CpuImpl::shld(u16 addr)
     auto& hl = registers.getHl();
     bus->writeIntoMemory(addr, hl.getLow());
     bus->writeIntoMemory(addr, hl.getHigh());
+    cycles += 16;
 }
 
 void CpuImpl::sta(u16 addr)
@@ -523,6 +533,7 @@ void CpuImpl::sta(u16 addr)
     // STA - Store Accumulator
     auto& accumulator = registers.getAf().getHigh();
     bus->writeIntoMemory(addr, accumulator);
+    cycles += 13;
 }
 
 void CpuImpl::ldax(u16& reg)
@@ -531,6 +542,7 @@ void CpuImpl::ldax(u16& reg)
     u16 addr = reg;
     auto& accumulator = registers.getAf().getHigh();
     accumulator = bus->readFromMemory(addr);
+    cycles += 7;
 }
 
 void CpuImpl::lhld(u16 addr)
@@ -540,6 +552,7 @@ void CpuImpl::lhld(u16 addr)
     auto& l = registers.getHl().getLow();
     l = bus->readFromMemory(addr);
     h = bus->readFromMemory(addr + 1);
+    cycles += 16;
 }
 
 void CpuImpl::lda(u16 addr)
@@ -547,21 +560,24 @@ void CpuImpl::lda(u16 addr)
     // LDA - Load Accumulator
     auto& accumulator = registers.getAf().getHigh();
     accumulator = bus->readFromMemory(addr);
+    cycles += 13;
 }
 
 void CpuImpl::inx(u16& reg)
 {
     // INX - Increment Extended
     reg++;
+    cycles += 5;
 }
 
 void CpuImpl::dcx(u16& reg)
 {
     // DCX - Decrement Extended
     reg--;
+    cycles += 5;
 }
 
-void CpuImpl::inr(u8& reg)
+void CpuImpl::inr(u8& reg, bool mem)
 {
     // INR - Increment
     auto& flags = registers.getAf().getLow();
@@ -570,9 +586,10 @@ void CpuImpl::inr(u8& reg)
     flags.Z = reg == 0;
     flags.S = (reg >> 7) & 0x1;
     flags.P = checkParity(reg);
+    cycles += mem ? 10 : 5;
 }
 
-void CpuImpl::dcr(u8& reg)
+void CpuImpl::dcr(u8& reg, bool mem)
 {
     // DCR - Decrement
     auto& flags = registers.getAf().getLow();
@@ -581,12 +598,14 @@ void CpuImpl::dcr(u8& reg)
     flags.Z = reg == 0;
     flags.S = (reg >> 7) & 0x1;
     flags.P = checkParity(reg);
+    cycles += mem ? 10 : 5;
 }
 
-void CpuImpl::mvi(u8& reg, u8 immedate)
+void CpuImpl::mvi(u8& reg, u8 immedate, bool mem)
 {
     // MVI - Move Immedate
     reg = immedate;
+    cycles += mem ? 10 : 7;
 }
 
 void CpuImpl::rlc()
@@ -596,6 +615,7 @@ void CpuImpl::rlc()
     auto& flags = registers.getAf().getLow();
     flags.C = (accumulator >> 7) & 0x1;
     accumulator = (accumulator << 1) | flags.C;
+    cycles += 4;
 }
 
 void CpuImpl::rrc()
@@ -605,6 +625,7 @@ void CpuImpl::rrc()
     auto& flags = registers.getAf().getLow();
     flags.C = accumulator & 0x1;
     accumulator = (accumulator >> 1) | (flags.C << 7);
+    cycles += 4;
 }
 
 void CpuImpl::ral()
@@ -615,6 +636,7 @@ void CpuImpl::ral()
     auto oldCarry = flags.C;
     flags.C = (accumulator >> 7) & 0x1;
     accumulator = (accumulator << 1) | oldCarry;
+    cycles += 4;
 }
 
 void CpuImpl::rar()
@@ -625,6 +647,7 @@ void CpuImpl::rar()
     auto oldCarry = flags.C;
     flags.C = accumulator & 0x1;
     accumulator = (accumulator >> 1) | (oldCarry << 7);
+    cycles += 4;
 }
 
 void CpuImpl::daa()
@@ -647,6 +670,7 @@ void CpuImpl::daa()
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
     flags.P = checkParity(accumulator);
+    cycles += 4;
 }
 
 void CpuImpl::cma()
@@ -654,6 +678,7 @@ void CpuImpl::cma()
     // CMA - Complement Accumulator
     auto& accumulator = registers.getAf().getHigh();
     accumulator = ~accumulator;
+    cycles += 4;
 }
 
 void CpuImpl::stc()
@@ -661,6 +686,7 @@ void CpuImpl::stc()
     // STC - Set Carry
     auto& flags = registers.getAf().getLow();
     flags.C = 1;
+    cycles += 4;
 }
 
 void CpuImpl::cmc()
@@ -668,66 +694,77 @@ void CpuImpl::cmc()
     // CMC - Complement Carry
     auto& flags = registers.getAf().getLow();
     flags.C = ~flags.C;
+    cycles += 4;
 }
 
-void CpuImpl::mov(u8& destination, u8& source)
+void CpuImpl::mov(u8& destination, u8& source, bool mem)
 {
     // MOV - Move register
     destination = source;
+    cycles += mem ? 7 : 5;
 }
 
 void CpuImpl::halt()
 {
     // HALT - Halt
     halted = true;
+    cycles += 7;
 }
 
-void CpuImpl::add(u8& src)
+void CpuImpl::add(u8& src, bool mem)
 {
     // ADD - Add to accumulator
     adi(src);
+    cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::adc(u8& src)
+void CpuImpl::adc(u8& src, bool mem)
 {
     // ADC - Add with Carry
     aci(src);
+    cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::sub(u8& src)
+void CpuImpl::sub(u8& src, bool mem)
 {
     // SUB - Subtract from accumulator
     sui(src);
+    cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::sbb(u8& src)
+void CpuImpl::sbb(u8& src, bool mem)
 {
     // SBB - Subtract with Borrow
     sbi(src);
+    cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::ana(u8& src)
+void CpuImpl::ana(u8& src, bool mem)
 {
     // ANA - And Accumulator
     ani(src);
+    cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::xra(u8& src)
+void CpuImpl::xra(u8& src, bool mem)
 {
     // XRA - Xor Accumulator
     xri(src);
+    cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::ora(u8& src)
+void CpuImpl::ora(u8& src, bool mem)
 {
     // ORA - Or Accumulator
     ori(src);
+    cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::cmp(u8& src)
+void CpuImpl::cmp(u8& src, bool mem)
 {
     // CMP - Compare with accumulator
     cpi(src);
+    cycles += mem ? 7 : 4;
 }
 
 void CpuImpl::ret(Condition c)
@@ -739,6 +776,11 @@ void CpuImpl::ret(Condition c)
         auto& pc = registers.getPc();
         auto addr = popFromStack16();
         pc = addr;
+        cycles += 11;
+    }
+    else 
+    {
+        cycles += 5;
     }
 }
 
@@ -748,18 +790,21 @@ void CpuImpl::ret()
     auto& pc = registers.getPc();
     auto addr = popFromStack16();
     pc = addr;
+    cycles += 10;
 }
 
 void CpuImpl::pop(u16& reg)
 {
     // POP - Pop from stack
     reg = popFromStack16();
+    cycles += 10;
 }
 
 void CpuImpl::push(u16& reg)
 {
     // PUSH - Push into stack
     pushIntoStack16(reg);
+    cycles += 11;
 }
 
 void CpuImpl::pchl()
@@ -768,6 +813,7 @@ void CpuImpl::pchl()
     auto& hl = registers.getHl().getRaw();
     auto& pc = registers.getPc();
     pc = hl;
+    cycles += 5;
 }
 
 void CpuImpl::sphl()
@@ -776,6 +822,7 @@ void CpuImpl::sphl()
     auto& hl = registers.getHl().getRaw();
     auto& sp = registers.getSp();
     sp = hl;
+    cycles += 5;
 }
 
 void CpuImpl::jmp(Condition c, u16 addr)
@@ -787,6 +834,7 @@ void CpuImpl::jmp(Condition c, u16 addr)
         auto& pc = registers.getPc();
         pc = addr;
     }
+    cycles += 10;
 }
 
 void CpuImpl::jmp(u16 addr)
@@ -794,6 +842,7 @@ void CpuImpl::jmp(u16 addr)
     // JMP - Jump
     auto& pc = registers.getPc();
     pc = addr;
+    cycles += 10;
 }
 
 void CpuImpl::out(u8 port)
@@ -801,6 +850,7 @@ void CpuImpl::out(u8 port)
     // OUT - Write to output port
     auto& a = registers.getAf().getHigh();
     bus->writeIntoOutputPort(port, a);
+    cycles += 10;
 }
 
 void CpuImpl::in(u8 port)
@@ -808,6 +858,7 @@ void CpuImpl::in(u8 port)
     // IN - Read from input port
     auto& a = registers.getAf().getHigh();
     a = bus->readFromInputPort(port);
+    cycles += 10;
 }
 
 void CpuImpl::ei()
@@ -815,12 +866,14 @@ void CpuImpl::ei()
     // EI - Enable Interrupts
     interrupt_enable = true;
     interrupt_delay = true;
+    cycles += 4;
 }
 
 void CpuImpl::di()
 {
     // DI - Disable Interrupts
     interrupt_enable = false;
+    cycles += 4;
 }
 
 void CpuImpl::xthl()
@@ -834,6 +887,7 @@ void CpuImpl::xthl()
     bus->writeIntoMemory(sp, hl.getLow());
     bus->writeIntoMemory(sp + 1, hl.getHigh());
     hl = memValue;
+    cycles += 18;
 }
 
 void CpuImpl::xchg()
@@ -844,6 +898,7 @@ void CpuImpl::xchg()
     auto hlTemp = hl;
     hl = de;
     de = hlTemp;
+    cycles += 5;
 }
 
 void CpuImpl::call(Condition c, u16 addr)
@@ -855,6 +910,11 @@ void CpuImpl::call(Condition c, u16 addr)
         auto& pc = registers.getPc();
         pushIntoStack16(pc);
         pc = addr;
+        cycles += 17;
+    }
+    else
+    {
+        cycles += 11;
     }
 }
 
@@ -864,6 +924,7 @@ void CpuImpl::call(u16 addr)
     auto& pc = registers.getPc();
     pushIntoStack16(pc);
     pc = addr;
+    cycles += 17;
 }
 
 void CpuImpl::adi(u8 immedate)
@@ -878,6 +939,7 @@ void CpuImpl::adi(u8 immedate)
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
     flags.P = checkParity(accumulator);
+    cycles += 7;
 }
 
 void CpuImpl::aci(u8 immedate)
@@ -893,6 +955,7 @@ void CpuImpl::aci(u8 immedate)
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
     flags.P = checkParity(accumulator);
+    cycles += 7;
 }
 
 void CpuImpl::sui(u8 immedate)
@@ -908,6 +971,7 @@ void CpuImpl::sui(u8 immedate)
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
     flags.P = checkParity(accumulator);
+    cycles += 7;
 }
 
 void CpuImpl::sbi(u8 immedate)
@@ -923,6 +987,7 @@ void CpuImpl::sbi(u8 immedate)
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
     flags.P = checkParity(accumulator);
+    cycles += 7;
 }
 
 void CpuImpl::ani(u8 immedate)
@@ -936,6 +1001,7 @@ void CpuImpl::ani(u8 immedate)
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
     flags.P = checkParity(accumulator);
+    cycles += 7;
 }
 
 void CpuImpl::xri(u8 immedate)
@@ -949,6 +1015,7 @@ void CpuImpl::xri(u8 immedate)
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
     flags.P = checkParity(accumulator);
+    cycles += 7;
 }
 
 void CpuImpl::ori(u8 immedate)
@@ -962,6 +1029,7 @@ void CpuImpl::ori(u8 immedate)
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
     flags.P = checkParity(accumulator);
+    cycles += 7;
 }
 
 void CpuImpl::cpi(u8 immedate)
@@ -977,6 +1045,7 @@ void CpuImpl::cpi(u8 immedate)
     flags.Z = result == 0;
     flags.S = (result >> 7) & 0x1;
     flags.P = checkParity(result);
+    cycles += 7;
 }
 
 void CpuImpl::rst(u8 vector)
@@ -985,4 +1054,5 @@ void CpuImpl::rst(u8 vector)
     auto& pc = registers.getPc();
     pushIntoStack16(pc);
     pc = vector;
+    cycles += 11;
 }

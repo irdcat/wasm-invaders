@@ -37,3 +37,8 @@ u8& MemoryImpl::memoryRef(u16 addr)
     // RAM/VRAM Mirror
     return memoryRef(addr - 0x2000);
 }
+
+const std::array<u8, 0x1C00>& MemoryImpl::getVRam() const
+{
+    return vram;
+}

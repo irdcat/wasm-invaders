@@ -13,11 +13,11 @@ class Cpu
 
         virtual unsigned cycleCount() = 0;
 
-        virtual void resetCycleCount() = 0;
+        virtual void subtractFromCycleCount(unsigned value) = 0;
 
-        virtual void step() = 0;
+        virtual unsigned step() = 0;
 
-        virtual void executeInstruction(u8 opcode) = 0;
+        virtual unsigned executeInstruction(u8 opcode) = 0;
 
         virtual void interrupt(u8 interrupt_source) = 0;
 };

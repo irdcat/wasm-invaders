@@ -12,17 +12,10 @@ class MemoryImpl : public Memory
 
         u8& memoryRef(u16 addr) override;
 
+        const std::array<u8, 0x1C00>& getVRam() const override; 
+
     private:
-        static constexpr const unsigned ROM_SIZE = 0x2000;
-        static constexpr const unsigned RAM_SIZE = 0x0400;
-        static constexpr const unsigned VRAM_SIZE = 0x1C00;
-
-        static constexpr const unsigned ROM_START_ADDR = 0x0000;
-        static constexpr const unsigned RAM_START_ADDR = 0x2000;
-        static constexpr const unsigned VRAM_START_ADDR = 0x2400;
-        static constexpr const unsigned RAM_MIRROR_START_ADDR = 0x4000;
-
-        std::array<u8, ROM_SIZE> rom;
-        std::array<u8, RAM_SIZE> ram;
-        std::array<u8, VRAM_SIZE> vram;
+        Rom rom;
+        Ram ram;
+        VRam vram;
 };
