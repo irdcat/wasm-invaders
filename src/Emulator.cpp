@@ -155,7 +155,7 @@ void Emulator::update(uint32_t dt)
         {
             cpu->subtractFromCycleCount(CYCLES_PER_FRAME / 2);
             cpu->interrupt(currentInterrupt);
-            if(currentInterrupt == RST_10)
+            if(currentInterrupt == RST_10) // VBLANK
             {
                 auto vram = memory->getVRam();
                 uint32_t* renderBuffer = nullptr;
