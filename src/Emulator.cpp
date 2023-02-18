@@ -80,7 +80,7 @@ void Emulator::initializeSdlResources()
     renderer = make_sdl_resource(
         SDL_CreateRenderer,
         SDL_DestroyRenderer,
-        window,
+        window.get(),
         -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
@@ -89,7 +89,7 @@ void Emulator::initializeSdlResources()
     texture = make_sdl_resource(
         SDL_CreateTexture,
         SDL_DestroyTexture,
-        renderer,
+        renderer.get(),
         SDL_PIXELFORMAT_RGBA32,
         SDL_TEXTUREACCESS_STREAMING,
         DISPLAY_WIDTH,
