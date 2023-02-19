@@ -5,6 +5,7 @@
 Prequisites:
 - emscripten
 - node
+- make
 
 ### Installing http-server
 
@@ -12,8 +13,9 @@ Prequisites:
 
 ## Compiling
 
-`emcc -c src/main.c -o obj/main.o -s USE_SDL=2`
-`emcc obj/main.o -o index.html -s USE_SDL=2`
+Create obj directory and then execute:
+
+`make`
 
 ## Serving generated page
 
@@ -21,4 +23,4 @@ Prequisites:
 
 ## Run
 
-Open localhost:8080/index.html in the browser
+Open localhost:8080/wasm-invaders.html in the browser
