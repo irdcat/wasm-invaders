@@ -54,6 +54,7 @@ unsigned CpuImpl::step()
         u8 opcode = fetchOpcode();
         return executeInstruction(opcode);
     }
+    return 0;
 }
 
 unsigned CpuImpl::executeInstruction(u8 opcode)
@@ -478,10 +479,9 @@ void CpuImpl::pushIntoStack16(u16 value)
 bool CpuImpl::checkParity(u8 value)
 {
     auto counter = 0;
-    while (value > 0)
+    for(auto bit=0; bit<8; bit++)
     {
-        counter += value & 0x1;
-        value >>= 1;
+        counter += (value >> bit) & 1;
     }
     return !(counter % 2);
 }

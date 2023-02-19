@@ -60,5 +60,5 @@ void BusImpl::writeIntoOutputPort(u8 port, u8 value)
 
 u8& BusImpl::getMemoryLocationRef(u16 addr)
 {
-    memory->memoryRef(addr);
+    return memory->memoryRef(addr);
 }

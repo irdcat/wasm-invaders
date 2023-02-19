@@ -26,9 +26,3 @@ using SdlDeleter = std::function<void(T*)>;
 
 template <typename T>
 using SdlResource = std::unique_ptr<T, SdlDeleter<T>>;
-
-template <typename T>
-using OwnedSdlResource = SdlResource<T>;
-
-template <typename T>
-using SharedSdlResource = std::shared_ptr<T, SdlDeleter<T>>;

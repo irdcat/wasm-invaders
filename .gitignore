@@ -1,1 +1,7 @@
 .vscode
+obj
+
+*.data
+*.html
+*.js
+*.wasm
