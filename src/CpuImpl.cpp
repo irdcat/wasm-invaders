@@ -1,5 +1,7 @@
 #include "CpuImpl.hpp"
+
 #include <type_traits>
+#include <iostream>
 
 CpuImpl::CpuImpl(const std::shared_ptr<Bus>& busPtr)
     : registers()
@@ -56,11 +58,18 @@ unsigned CpuImpl::step()
         interrupt_enable = false;
         halted = false;
 
+        std::cout 
+            << "Executing " << std::hex << (unsigned) interrupt_source 
+            << " from interrupt" << std::endl;
         return executeInstruction(interrupt_source);
     } 
     else if(!halted) 
     {
         u8 opcode = fetchOpcode();
+        std::cout 
+            << "Executing " << std::hex << (unsigned) opcode 
+            << " at " << std::hex << registers.getPc() - 1 
+            << std::endl;
         return executeInstruction(opcode);
     }
     return 0;
@@ -478,8 +487,8 @@ u16 CpuImpl::popFromStack16()
 
 void CpuImpl::pushIntoStack16(u16 value)
 {
-    pushIntoStack(value & 0xFF);
     pushIntoStack((value >> 8) & 0xFF);
+    pushIntoStack(value & 0xFF);
 }
 
 bool CpuImpl::checkParity(u8 value)
