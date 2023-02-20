@@ -58,18 +58,11 @@ unsigned CpuImpl::step()
         interrupt_enable = false;
         halted = false;
 
-        std::cout 
-            << "Executing " << std::hex << (unsigned) interrupt_source 
-            << " from interrupt" << std::endl;
         return executeInstruction(interrupt_source);
     } 
     else if(!halted) 
     {
         u8 opcode = fetchOpcode();
-        std::cout 
-            << "Executing " << std::hex << (unsigned) opcode 
-            << " at " << std::hex << registers.getPc() - 1 
-            << std::endl;
         return executeInstruction(opcode);
     }
     return 0;

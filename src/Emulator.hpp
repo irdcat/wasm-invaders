@@ -47,6 +47,6 @@ class Emulator
         static const constexpr unsigned DISPLAY_HEIGHT = 256;
         static const constexpr unsigned PIXEL_SIZE = 2;
         static const constexpr unsigned FRAMES_PER_SECOND = 60;
-        static const constexpr unsigned CYCLES_PER_SECOND = 1996800;
+        static const constexpr unsigned CYCLES_PER_SECOND = 1996800 * 5;
         static const constexpr unsigned CYCLES_PER_FRAME = CYCLES_PER_SECOND / FRAMES_PER_SECOND;
 };
