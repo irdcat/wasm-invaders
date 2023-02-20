@@ -9,7 +9,7 @@
 class CpuImpl : public Cpu
 {
     public:
-        CpuImpl(const std::shared_ptr<Bus>& busPtr);
+        explicit CpuImpl(const std::shared_ptr<Bus>& busPtr);
 
         ~CpuImpl() = default;
 
@@ -31,7 +31,7 @@ class CpuImpl : public Cpu
         bool interrupt_enable;
         bool interrupt_pending;
         bool interrupt_delay;
-        bool interrupt_source;
+        u8 interrupt_source;
         bool halted;
         unsigned cycles;
         Registers registers;

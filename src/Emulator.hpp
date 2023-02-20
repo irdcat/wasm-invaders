@@ -28,7 +28,7 @@ class Emulator
         void update(uint32_t ms);
         void render();
 
-        void handleKeyEvent(SDL_Event &event);
+        void handleKeyEvent(const SDL_Event &event);
 
         bool shouldRun;
 

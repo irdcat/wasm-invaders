@@ -5,7 +5,10 @@
 #include <utility>
 #include <system_error>
 #include <SDL2/SDL.h>
+
+#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#endif
 
 #include "ApuImpl.hpp"
 #include "BusImpl.hpp"
@@ -17,9 +20,10 @@
 
 Emulator::Emulator()
     : shouldRun(false)
+    , shiftRegister(std::make_shared<ShiftRegisterImpl>())
+    , inputs(std::make_shared<InputsImpl>())
+    , memory(std::make_shared<MemoryImpl>())
 {
-    shiftRegister = std::make_shared<ShiftRegisterImpl>();
-    inputs = std::make_shared<InputsImpl>();
     memory = std::make_shared<MemoryImpl>();
     apu = std::make_shared<ApuImpl>([](unsigned index){
         //TODO: Audio play callback
@@ -51,7 +55,9 @@ void Emulator::run()
         update(deltaTime);
         render();
 
+        #ifdef __EMSCRIPTEN__
         emscripten_sleep(0);
+        #endif
 
         lastTime = currentTime;
     }
@@ -158,8 +164,12 @@ void Emulator::update(uint32_t dt)
             if(currentInterrupt == RST_10) // VBLANK
             {
                 auto vram = memory->getVRam();
-                uint32_t* renderBuffer = nullptr;
+                Uint32 * renderBuffer = nullptr;
+                Uint32 format = 0;
                 int pitch = 0;
+                SDL_QueryTexture(texture.get(), &format, nullptr, nullptr, nullptr);
+                SDL_PixelFormat pixelFormat;
+                pixelFormat.format = format;
                 SDL_LockTexture(texture.get(), nullptr, reinterpret_cast<void**>(&renderBuffer), &pitch);
                 for(unsigned byte = 0; byte < vram.size(); byte++)
                 {
@@ -168,40 +178,35 @@ void Emulator::update(uint32_t dt)
                     auto data = vram[byte];
                     for(unsigned bit = 0; bit < 8; bit++)
                     {
-                        uint32_t color = 0x000000FF;
+                        Uint32 color = SDL_MapRGB(&pixelFormat, 0, 0, 0);
                         unsigned px = x + bit;
                         unsigned py = y;
                         if((data >> bit) & 1)
                         {
                             if(px < 16)
                             {
-                                if(py < 16 || py > 134)
-                                {
-                                    color |= 0xFFFFFF00;
-                                }
-                                else
-                                {
-                                    color |= 0x00FF0000;
-                                }
+                                color = py < 16 || py > 134 
+                                    ? SDL_MapRGB(&pixelFormat, 255, 255, 255) 
+                                    : SDL_MapRGB(&pixelFormat, 0, 255, 0);
                             }
                             else if(px >= 16 && px <= 72)
                             {
-                                color |= 0x00FF0000;
+                                color = SDL_MapRGB(&pixelFormat, 0, 255, 0);
                             }
                             else if(px >= 192 && px < 224)
                             {
-                                color |= 0xFF000000;
+                                color = SDL_MapRGB(&pixelFormat, 255, 0, 0);
                             }
                             else
                             {
-                                color |= 0xFFFFFF00;
+                                color = SDL_MapRGB(&pixelFormat, 255, 255, 255);
                             }
                         }
 
                         const unsigned renderBufferX = py;
                         const unsigned renderBufferY = -px + DISPLAY_HEIGHT - 1;
-                        const unsigned renderBufferIndex = renderBufferX * DISPLAY_HEIGHT + renderBufferY;
-                        renderBuffer[renderBufferIndex] = color; 
+                        const unsigned renderBufferIndex = renderBufferY * (pitch / sizeof(unsigned int)) + renderBufferX;
+                        renderBuffer[renderBufferIndex] = color;
                     }
                 }
             }
@@ -218,7 +223,7 @@ void Emulator::render()
     SDL_RenderPresent(renderer.get());
 }
 
-void Emulator::handleKeyEvent(SDL_Event &event)
+void Emulator::handleKeyEvent(const SDL_Event &event)
 {
     auto key = event.key.keysym.scancode;
     auto pressed = event.type == SDL_KEYDOWN;

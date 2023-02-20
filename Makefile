@@ -1,6 +1,6 @@
 EMCXX = em++
-EMCXXFLAGS = -s USE_SDL=2 -s NO_DISABLE_EXCEPTION_CATCHING -std=c++17
-EMOBJFLAGS = -s USE_SDL=2 -s ASYNCIFY -s NO_DISABLE_EXCEPTION_CATCHING --preload-file roms
+EMCXXFLAGS = -s USE_SDL=2 -s NO_DISABLE_EXCEPTION_CATCHING -std=c++17 -g
+EMOBJFLAGS = -s USE_SDL=2 -s WASM=1 -s ASYNCIFY -s NO_DISABLE_EXCEPTION_CATCHING --preload-file roms -g
 
 SOURCES := $(wildcard src/*.cpp)
 OBJECTS := $(patsubst src/%.cpp, obj/%.o, $(SOURCES))
@@ -12,6 +12,3 @@ wasm-invaders: $(OBJECTS)
 
 obj/%.o: src/%.cpp
 	${EMCXX} -c ${EMCXXFLAGS} -o $@ $<
-
-clean:
-	rm -rf obj

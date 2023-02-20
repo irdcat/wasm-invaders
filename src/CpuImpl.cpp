@@ -5,9 +5,18 @@ CpuImpl::CpuImpl(const std::shared_ptr<Bus>& busPtr)
     : registers()
     , bus(busPtr)
     , interrupt_enable(false)
+    , interrupt_delay(false)
+    , interrupt_pending(false)
+    , interrupt_source(0x00)
     , halted(false)
     , cycles(0)
 {
+    registers.getAf() = 0x0000;
+    registers.getBc() = 0x0000;
+    registers.getDe() = 0x0000;
+    registers.getHl() = 0x0000;
+    registers.getSp() = 0x0000;
+    registers.getPc() = 0x0000;
     auto& rawFlags = registers.getAf().getLow().raw;
     rawFlags = 0x2; // Set bit between Carry and Parity to 1
 }
@@ -60,9 +69,7 @@ unsigned CpuImpl::step()
 unsigned CpuImpl::executeInstruction(u8 opcode)
 {
     auto cyclesBeforeInstruction = cycles;
-    if(interrupt_delay) {
-        interrupt_delay = false;
-    }
+    interrupt_delay = false;
 
     // Extracting bitfields from opcode in following format
     // 
@@ -434,7 +441,6 @@ bool CpuImpl::evaluateCondition(Condition c)
 
 u16 CpuImpl::fetchImmedate16()
 {
-    auto& pc = registers.getPc();
     u8 lsb = fetchImmedate8();
     u8 msb = fetchImmedate8();
 
