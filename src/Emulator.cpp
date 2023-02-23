@@ -43,12 +43,12 @@ Emulator::~Emulator()
 
 void Emulator::run()
 {
-    uint32_t currentTime = 0;
-    uint32_t lastTime = 0;
-    uint32_t deltaTime = 0;
+    uint64_t currentTime = 0;
+    uint64_t lastTime = 0;
+    uint64_t deltaTime = 0;
     while(shouldRun)
     {
-        currentTime = SDL_GetTicks();
+        currentTime = SDL_GetTicks64();
         deltaTime = currentTime - lastTime;
 
         handleInput();
@@ -163,54 +163,8 @@ void Emulator::update(uint32_t dt)
             cpu->interrupt(currentInterrupt);
             if(currentInterrupt == RST_10) // VBLANK
             {
-                auto vram = memory->getVRam();
-                Uint32 * renderBuffer = nullptr;
-                Uint32 format = 0;
-                int pitch = 0;
-                SDL_QueryTexture(texture.get(), &format, nullptr, nullptr, nullptr);
-                SDL_PixelFormat pixelFormat;
-                pixelFormat.format = format;
-                SDL_LockTexture(texture.get(), nullptr, reinterpret_cast<void**>(&renderBuffer), &pitch);
-                for(unsigned byte = 0; byte < vram.size(); byte++)
-                {
-                    const unsigned y = (byte * 8) / DISPLAY_HEIGHT;
-                    const unsigned x = (byte * 8) % DISPLAY_HEIGHT;
-                    auto data = vram[byte];
-                    for(unsigned bit = 0; bit < 8; bit++)
-                    {
-                        Uint32 color = SDL_MapRGB(&pixelFormat, 0, 0, 0);
-                        unsigned px = x + bit;
-                        unsigned py = y;
-                        if((data >> bit) & 1)
-                        {
-                            if(px < 16)
-                            {
-                                color = py < 16 || py > 134 
-                                    ? SDL_MapRGB(&pixelFormat, 255, 255, 255) 
-                                    : SDL_MapRGB(&pixelFormat, 0, 255, 0);
-                            }
-                            else if(px >= 16 && px <= 72)
-                            {
-                                color = SDL_MapRGB(&pixelFormat, 0, 255, 0);
-                            }
-                            else if(px >= 192 && px < 224)
-                            {
-                                color = SDL_MapRGB(&pixelFormat, 255, 0, 0);
-                            }
-                            else
-                            {
-                                color = SDL_MapRGB(&pixelFormat, 255, 255, 255);
-                            }
-                        }
-
-                        const unsigned renderBufferX = py;
-                        const unsigned renderBufferY = -px + DISPLAY_HEIGHT - 1;
-                        const unsigned renderBufferIndex = renderBufferY * (pitch / sizeof(unsigned int)) + renderBufferX;
-                        renderBuffer[renderBufferIndex] = color;
-                    }
-                }
+                updateScreen();
             }
-            SDL_UnlockTexture(texture.get());
             currentInterrupt = currentInterrupt == RST_8 ? RST_10 : RST_8;
         }
     }
@@ -221,6 +175,57 @@ void Emulator::render()
     SDL_RenderClear(renderer.get());
     SDL_RenderCopy(renderer.get(), texture.get(), nullptr, nullptr);
     SDL_RenderPresent(renderer.get());
+}
+
+void Emulator::updateScreen()
+{
+    auto vram = memory->getVRam();
+    Uint32 * renderBuffer = nullptr;
+    Uint32 format = 0;
+    int pitch = 0;
+    SDL_QueryTexture(texture.get(), &format, nullptr, nullptr, nullptr);
+    SDL_PixelFormat pixelFormat;
+    pixelFormat.format = format;
+    SDL_LockTexture(texture.get(), nullptr, reinterpret_cast<void**>(&renderBuffer), &pitch);
+    for(unsigned byte = 0; byte < vram.size(); byte++)
+    {
+        const unsigned y = (byte * 8) / DISPLAY_HEIGHT;
+        const unsigned x = (byte * 8) % DISPLAY_HEIGHT;
+        auto data = vram[byte];
+        for(unsigned bit = 0; bit < 8; bit++)
+        {
+            Uint32 color = SDL_MapRGB(&pixelFormat, 0, 0, 0);
+            unsigned px = x + bit;
+            unsigned py = y;
+            if((data >> bit) & 1)
+            {
+                if(px < 16)
+                {
+                    color = py < 16 || py > 134 
+                        ? SDL_MapRGB(&pixelFormat, 255, 255, 255) 
+                        : SDL_MapRGB(&pixelFormat, 0, 255, 0);
+                }
+                else if(px >= 16 && px <= 72)
+                {
+                    color = SDL_MapRGB(&pixelFormat, 0, 255, 0);
+                }
+                else if(px >= 192 && px < 224)
+                {
+                    color = SDL_MapRGB(&pixelFormat, 255, 0, 0);
+                }
+                else
+                {
+                    color = SDL_MapRGB(&pixelFormat, 255, 255, 255);
+                }
+            }
+
+            const unsigned renderBufferX = py;
+            const unsigned renderBufferY = -px + DISPLAY_HEIGHT - 1;
+            const unsigned renderBufferIndex = renderBufferY * (pitch / sizeof(unsigned int)) + renderBufferX;
+            renderBuffer[renderBufferIndex] = color;
+        }
+    }
+    SDL_UnlockTexture(texture.get());
 }
 
 void Emulator::handleKeyEvent(const SDL_Event &event)

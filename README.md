@@ -6,6 +6,7 @@ Prequisites:
 - emscripten
 - node
 - make
+- cmake
 
 ### Installing http-server
 
@@ -13,8 +14,7 @@ Prequisites:
 
 ## Compiling
 
-Create obj directory and then execute:
-
+`emcmake cmake . -B . -G "Unix Makefiles"`
 `make`
 
 ## Serving generated page

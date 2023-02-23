@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <chrono>
 
 #include "Apu.hpp"
 #include "Bus.hpp"
@@ -27,6 +26,8 @@ class Emulator
         void handleInput();
         void update(uint32_t ms);
         void render();
+
+        void updateScreen();
 
         void handleKeyEvent(const SDL_Event &event);
 
