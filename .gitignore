@@ -1,7 +1,7 @@
 .vscode
 obj
 
-./build
+build/*
 
 *.data
 *.html

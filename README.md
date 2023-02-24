@@ -14,11 +14,7 @@ Prequisites:
 
 ## Building & Running emulator
 
-```
-emcmake cmake . -B . -G "Unix Makefiles"
-
-make
-```
+Use `build` script
 
 ### Serving generated page
 
@@ -30,10 +26,4 @@ Open localhost:8080/wasm-invaders.html in the browser
 
 ## Building & Running tests
 
-```
-cmake . -B build/test -G "Unix Makefiles"
-
-cmake --build build/test
-
-./build/test/runTests.exe
-```
+Use `build-tests` script
