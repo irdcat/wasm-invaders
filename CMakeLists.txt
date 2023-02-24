@@ -19,7 +19,9 @@ if(EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2 -s ASYNCIFY")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file ${ROMS_DIR}")
     add_executable(wasm-invaders ${APP_SOURCES})
-elseif(TESTS)
+endif()
+
+if(NOT EMSCRIPTEN)
     set(APP_LIB_SOURCES
         src/ApuImpl.cpp
         src/BusImpl.cpp
@@ -30,10 +32,10 @@ elseif(TESTS)
         src/Registers.cpp
     )
     set(TEST_SOURCES
-    
+        tests/CpuImplTests.cpp
     )
     set(CXX_STANDARD 17)
-    
+
     include(FetchContent)
     FetchContent_Declare(
         googletest
@@ -44,5 +46,5 @@ elseif(TESTS)
 
     add_library(wasm-invaders-lib ${APP_LIB_SOURCES})
     add_executable(runTests ${TEST_SOURCES})
-    target_link_libraries(runTests googletest gtest_main wasm-invaders-lib)
+    target_link_libraries(runTests gtest_main gmock_main wasm-invaders-lib)
 endif()
