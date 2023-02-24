@@ -12,15 +12,28 @@ Prequisites:
 
 `npm install -g http-server`
 
-## Compiling
+## Building & Running emulator
 
-`emcmake cmake . -B . -G "Unix Makefiles"`
-`make`
+```
+emcmake cmake . -B . -G "Unix Makefiles"
 
-## Serving generated page
+make
+```
+
+### Serving generated page
 
 `http-server ./`
 
-## Run
+### Run
 
 Open localhost:8080/wasm-invaders.html in the browser
+
+## Building & Running tests
+
+```
+cmake . -B build/test -G "Unix Makefiles"
+
+cmake --build build/test
+
+./build/test/runTests.exe
+```
