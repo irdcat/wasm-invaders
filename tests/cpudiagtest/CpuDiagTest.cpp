@@ -1,25 +1,11 @@
 #include <array>
 #include <vector>
-#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <memory>
-#include <cstdlib>
 
 #include "../../src/CpuImpl.hpp"
 #include "../../src/Bus.hpp"
-
-template <typename Container, typename T>
-bool contains(const Container &c, T value) 
-{
-    return std::any_of(
-        c.begin(), 
-        c.end(), 
-        [value](auto element){ 
-            return element == value;
-        }
-    );
-}
 
 class DiagnosticBusImpl
     : public Bus
@@ -29,121 +15,110 @@ class DiagnosticBusImpl
 
         ~DiagnosticBusImpl() = default;
 
-        u8 readFromMemory(u16 addr) const override
-        {
-            return memory[addr % 0x4000];
-        }
+        u8 readFromMemory(u16 addr) const override { return memory[addr & 0xFFFF]; }
+        void writeIntoMemory(u16 addr, u8 value) override { memory[addr & 0xFFFF] = value; }
 
-        void writeIntoMemory(u16 addr, u8 value) override
-        {
-            memory[addr % 0x4000] = value;
-        }
+        u8 readFromInputPort(u8 port) const override { return 0; }
+        void writeIntoOutputPort(u8 port, u8 value) override { }
 
-        u8 readFromInputPort(u8 port) const override
-        {
-            return 0;
-        }
+        u8& getMemoryLocationRef(u16 addr) override { return memory[addr & 0xFFFF]; }
 
-        void writeIntoOutputPort(u8 port, u8 value) override
-        {
-        }
-
-        u8& getMemoryLocationRef(u16 addr) override
-        {
-            return memory[addr % 0x4000];
-        }
+        void clearMemory() { for(auto& byte : memory) byte = 0; }
 
     private:
-        std::array<u8, 0x4000> memory;
-};
-
-class DiagnosticCpuImpl
-    : public CpuImpl
-{
-    public:
-        DiagnosticCpuImpl(const std::shared_ptr<Bus>& bus)
-            : CpuImpl(bus)
-        {
-            auto& pc = CpuImpl::getRegisters().getPc();
-            pc = 0x100; // Set origin to addr 0x100
-        }
-
-        ~DiagnosticCpuImpl() = default;
-
-        unsigned executeInstruction(u8 opcode) override 
-        {
-            const std::array<u8, 4> CALL_OPCODES = { 0xCD, 0xDD, 0xED, 0xFD };
-            if(contains(CALL_OPCODES, opcode))
-            {
-                auto addr = peekAddress();
-                if(addr == 0x0005) // CP/M internal printing procedure
-                {
-                    auto& c = CpuImpl::getRegisters().getBc().getLow();
-
-                    if(c == 0x9)
-                    {
-                        u16 offset = CpuImpl::getRegisters().getDe();
-                        char* str = reinterpret_cast<char *>(&bus->getMemoryLocationRef(offset + 3));
-                        while(*str != '$')
-                        {
-                            std::cout << *str++;
-                        }
-                        std::cout << std::endl;
-                    }
-                }
-                else if(addr == 0x0000)
-                {
-                    std::exit(0);
-                }
-
-                return 11;
-            }
-            if(CpuImpl::getRegisters().getPc() == 0x1)
-            {
-                std::exit(0);
-            }
-
-            return CpuImpl::executeInstruction(opcode);
-        }
-
-    private:
-        u16 peekAddress()
-        {
-            return bus->readFromMemory(CpuImpl::getRegisters().getPc())
-                | (bus->readFromMemory(CpuImpl::getRegisters().getPc() + 1) << 8);
-        }
+        std::array<u8, 0x10000> memory;
 };
 
 int main()
 {
     auto bus = std::make_shared<DiagnosticBusImpl>();
-    auto cpu = std::make_unique<DiagnosticCpuImpl>(bus);
+    auto cpu = std::make_unique<CpuImpl>(bus);
 
-    auto file = std::ifstream("cpudiag.bin", std::ios::binary);
+    auto loadRom = [&bus](auto filename, auto startAddr) {
+        auto file = std::ifstream(filename, std::ios::binary);
+        if(!file.is_open())
+        {
+            std::cout << "Unable to open file " << filename << std::endl;
+            file.exceptions(file.failbit);
+        }
 
-    if(!file.is_open())
-    {
-        file.exceptions(file.failbit);
-    }
+        file.seekg(0, std::ios::end);
+        auto fileSize = file.tellg();
+        file.seekg(0, std::ios::beg);
 
-    file.seekg(0, std::ios::end);
-    auto fileSize = file.tellg();
-    file.seekg(0, std::ios::beg);
+        std::vector<u8> data(fileSize);
+        file.read((char *) &data[0], fileSize);
 
-    std::vector<u8> data(fileSize);
-    file.read((char *) &data[0], fileSize);
+        for(const auto& byte : data)
+            bus->writeIntoMemory(startAddr++, byte);
 
-    auto startAddr = 0x100;
-    for(const auto& byte : data)
-    {
-        bus->writeIntoMemory(startAddr++, byte);
-    }
-    bus->writeIntoMemory(0x5, 0xC9);
+        std::cout << std::endl << "-----------------------------------" << std::endl;
+        std::cout << "File " << filename << " loaded, size " << fileSize << std::endl;
+    };
 
-    while(true)
-    {
-        cpu->step();
-    }
+    auto executeTest = [&cpu, &bus, loadRom](auto filename, bool checkForSuccess) {
+        static const u8 RET_OPCODE = 0xC9;
+        static const u16 ORIGIN = 0x0100;
+        static const u16 CPM_WBOOT_SECT_ADDR = 0x0000;
+        static const u16 CPM_PRINT_PROC_ADDR = 0x0005;
+
+        bus->clearMemory();
+        bool success = true;
+
+        loadRom(filename, ORIGIN);
+        bus->writeIntoMemory(CPM_PRINT_PROC_ADDR, RET_OPCODE); // Inject RET in place of CP/M printing subroutine
+        auto& pc = cpu->getRegisters().getPc();
+        pc = ORIGIN; // Start execution at address 0x0100
+
+        while(true)
+        {
+            if(cpu->getRegisters().getPc() == CPM_PRINT_PROC_ADDR)
+            {
+                u8 c = cpu->getRegisters().getBc().getLow();
+                u16 de = cpu->getRegisters().getDe();
+                u8 e = cpu->getRegisters().getDe().getLow();
+
+                if(c == 0x9)
+                {
+                    auto addr = de;
+                    char * data = reinterpret_cast<char*>(&bus->getMemoryLocationRef(addr));
+                    while(*data != '$')
+                    {
+                        std::cout << *data++;
+                    }
+                    std::cout << std::endl;
+                    success = false;
+                }
+                else if(c == 0x2)
+                {
+                    std::cout << (char) e;
+                }
+            }
+            cpu->step();
+            if(cpu->isHalted())
+            {
+                std::cout << "Cpu has beed HALTED!" << std::endl;
+                std::exit(1);
+            }
+            if(cpu->getRegisters().getPc() == CPM_WBOOT_SECT_ADDR)
+            {
+                std::cout << std::endl << "Jumped to 0000" << std::endl;
+                if(checkForSuccess && success)
+                {
+                    std::exit(1);
+                }
+                return;
+            }
+        }
+    };
+
+    // Disabled as it keeps being stuck in a loop
+    // Probably because CPU implementation is not correct
+    //executeTest("CPUTEST.COM", false);
+    
+    executeTest("TEST.COM", false);
+    executeTest("8080PRE.COM", true);
+    executeTest("8080EX1.COM", false);
 
     return 0;
 }

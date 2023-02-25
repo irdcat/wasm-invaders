@@ -1,3 +1,3 @@
 cd .\build\tests
-.\cpu-diag-test.exe
+.\cpu-diag-tests.exe
 cd ..\..

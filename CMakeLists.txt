@@ -32,7 +32,7 @@ if(NOT EMSCRIPTEN)
         src/Registers.cpp
     )
     set(TEST_SOURCES
-        tests/CpuImplTests.cpp
+        tests/CpuImplTest.cpp
     )
     set(CPU_DIAG_TEST_SOURCES
         tests/cpudiagtest/CpuDiagTest.cpp
@@ -51,6 +51,6 @@ if(NOT EMSCRIPTEN)
     add_executable(unit-tests ${TEST_SOURCES})
     target_link_libraries(unit-tests gtest_main gmock_main wasm-invaders)
 
-    add_executable(cpu-diag-test ${CPU_DIAG_TEST_SOURCES})
-    target_link_libraries(cpu-diag-test wasm-invaders)
+    add_executable(cpu-diag-tests ${CPU_DIAG_TEST_SOURCES})
+    target_link_libraries(cpu-diag-tests wasm-invaders)
 endif()

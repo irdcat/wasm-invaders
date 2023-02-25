@@ -27,6 +27,8 @@ class CpuImpl : public Cpu
 
         void interrupt(u8 interrupt_source) override;
 
+        bool isHalted() const override;
+
     protected:
         std::shared_ptr<Bus> bus;
 

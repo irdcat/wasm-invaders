@@ -8,7 +8,7 @@
 using testing::Eq;
 using testing::Return;
 
-class CpuImplTests : public testing::Test
+class CpuImplTest : public testing::Test
 {
     protected:
         void SetUp() override
@@ -21,7 +21,7 @@ class CpuImplTests : public testing::Test
         std::shared_ptr<BusMock> bus;
 };
 
-TEST_F(CpuImplTests, testFetchOpcode)
+TEST_F(CpuImplTest, testFetchOpcode)
 {
     auto& pc = testedCpu->getRegisters().getPc();
     pc = 0x100;

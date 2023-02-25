@@ -108,6 +108,11 @@ void CpuImpl::interrupt(u8 interrupt_source)
     this->interrupt_source = interrupt_source;
 }
 
+bool CpuImpl::isHalted() const 
+{
+    return halted;
+}
+
 void CpuImpl::executeFirstGroupInstruction(u8 y, u8 z, u8 p, u8 q)
 {
     // x == 0

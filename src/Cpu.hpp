@@ -20,4 +20,6 @@ class Cpu
         virtual unsigned executeInstruction(u8 opcode) = 0;
 
         virtual void interrupt(u8 interrupt_source) = 0;
+
+        virtual bool isHalted() const = 0;
 };
