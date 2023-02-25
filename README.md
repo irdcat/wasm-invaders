@@ -10,20 +10,45 @@ Prequisites:
 
 ### Installing http-server
 
-`npm install -g http-server`
+```
+npm install -g http-server
+```
 
-## Building & Running emulator
+## Emulator
 
-Use `build` script
+### Building
+
+```
+.\build.ps1
+```
 
 ### Serving generated page
 
-`http-server ./`
+```
+http-server ./
+```
 
-### Run
+### Running
 
 Open localhost:8080/wasm-invaders.html in the browser
 
 ## Building & Running tests
 
-Use `build-tests` script
+### Building
+
+Building tests
+```
+.\build-tests.ps1
+```
+
+### Running
+
+Running unit-tests
+```
+.\unit-tests.ps1
+```
+
+Running cpu diagnostics tests
+```
+.\cpu-diag-tests.ps1
+```
