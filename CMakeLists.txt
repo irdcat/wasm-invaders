@@ -33,6 +33,8 @@ if(NOT EMSCRIPTEN)
     )
     set(TEST_SOURCES
         tests/CpuImplTest.cpp
+        tests/RegisterPairTest.cpp
+        tests/ShiftRegisterImplTest.cpp
     )
     set(CPU_DIAG_TEST_SOURCES
         tests/cpudiagtest/CpuDiagTest.cpp

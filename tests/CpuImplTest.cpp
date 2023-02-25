@@ -11,6 +11,8 @@ using testing::Return;
 class CpuImplTest : public testing::Test
 {
     protected:
+    
+
         void SetUp() override
         {
             bus = std::make_shared<BusMock>();
@@ -18,7 +20,7 @@ class CpuImplTest : public testing::Test
         }
 
         std::unique_ptr<CpuImpl> testedCpu;
-        std::shared_ptr<BusMock> bus;
+        std::shared_ptr<BusMock> bus; 
 };
 
 TEST_F(CpuImplTest, testFetchOpcode)
