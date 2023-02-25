@@ -23,9 +23,12 @@ class CpuImpl : public Cpu
 
         unsigned step() override;
 
-        unsigned executeInstruction(u8 opcode) override;
+        virtual unsigned executeInstruction(u8 opcode) override;
 
         void interrupt(u8 interrupt_source) override;
+
+    protected:
+        std::shared_ptr<Bus> bus;
 
     private:
         bool interrupt_enable;
@@ -35,7 +38,6 @@ class CpuImpl : public Cpu
         bool halted;
         unsigned cycles;
         Registers registers;
-        std::shared_ptr<Bus> bus;
 
         void executeFirstGroupInstruction(u8 y, u8 z, u8 p, u8 q);
         void executeSecondGroupInstruction(u8 y, u8 z);

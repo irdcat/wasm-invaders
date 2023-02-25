@@ -34,6 +34,9 @@ if(NOT EMSCRIPTEN)
     set(TEST_SOURCES
         tests/CpuImplTests.cpp
     )
+    set(CPU_DIAG_TEST_SOURCES
+        tests/cpudiagtest/CpuDiagTest.cpp
+    )
     set(CXX_STANDARD 17)
 
     include(FetchContent)
@@ -44,7 +47,10 @@ if(NOT EMSCRIPTEN)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
 
-    add_library(wasm-invaders-lib ${APP_LIB_SOURCES})
-    add_executable(runTests ${TEST_SOURCES})
-    target_link_libraries(runTests gtest_main gmock_main wasm-invaders-lib)
+    add_library(wasm-invaders ${APP_LIB_SOURCES})
+    add_executable(unit-tests ${TEST_SOURCES})
+    target_link_libraries(unit-tests gtest_main gmock_main wasm-invaders)
+
+    add_executable(cpu-diag-test ${CPU_DIAG_TEST_SOURCES})
+    target_link_libraries(cpu-diag-test wasm-invaders)
 endif()
