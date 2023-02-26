@@ -1,4 +1,10 @@
 template <typename TRaw, typename THigh, typename TLow>
+RegisterPair<TRaw, THigh, TLow>::RegisterPair(TRaw value)
+    : raw(value)
+{
+}
+
+template <typename TRaw, typename THigh, typename TLow>
 RegisterPair<TRaw, THigh, TLow>::operator TRaw() const
 {
     return raw;

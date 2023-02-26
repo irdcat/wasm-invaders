@@ -65,11 +65,11 @@ class CpuImpl : public Cpu
         // Instructions
         void nop();                                // NOP  - No operation
         void lxi(u16& reg16, u16 immedate);        // LXI  - Load extended register with immedate
-        void dad(u16& reg16);                      // DAD  - Double Add
-        void stax(u16& reg16);                     // STAX - Store Accumulator at address stored in extended register
+        void dad(u16 reg16);                       // DAD  - Double Add
+        void stax(u16 reg16);                      // STAX - Store Accumulator at address stored in extended register
         void shld(u16 addr);                       // SHLD - Store HL at immedate address
         void sta(u16 addr);                        // STA  - Store Accumulator at immedate address
-        void ldax(u16& reg16);                     // LDAX - Load Accumulator from address stored in extended register
+        void ldax(u16 reg16);                      // LDAX - Load Accumulator from address stored in extended register
         void lhld(u16 addr);                       // LHLD - Load HL from immedate address
         void lda(u16 addr);                        // LDA  - Load Accumulator from immedate address
         void inx(u16& reg16);                      // INX  - Increment extended register
@@ -85,16 +85,16 @@ class CpuImpl : public Cpu
         void cma();                                // CMA  - Complement accumulator
         void stc();                                // STC  - Set carry
         void cmc();                                // CMC  - Complement carry
-        void mov(u8& dest, u8& src, bool mem);     // MOV  - Move one register value to another    
+        void mov(u8& dest, u8 src, bool mem);      // MOV  - Move one register value to another    
         void halt();                               // HALT - Halt cpu
-        void add(u8& src, bool mem);               // ADD  - Add register value to accumulator
-        void adc(u8& src, bool mem);               // ADC  - Add register value to accumulator with carry
-        void sub(u8& src, bool mem);               // SUB  - Subtract register value from accumulator
-        void sbb(u8& src, bool mem);               // SBB  - Subtract register value from accumulator with borrow
-        void ana(u8& src, bool mem);               // ANA  - Logical AND register value with accumulator
-        void xra(u8& src, bool mem);               // XRA  - Logical XOR register value with accumulator
-        void ora(u8& src, bool mem);               // ORA  - Logical OR register value with accumulator
-        void cmp(u8& src, bool mem);               // CMP  - Compare register value with accumulator (subtract without storing result)
+        void add(u8 src, bool mem);                // ADD  - Add register value to accumulator
+        void adc(u8 src, bool mem);                // ADC  - Add register value to accumulator with carry
+        void sub(u8 src, bool mem);                // SUB  - Subtract register value from accumulator
+        void sbb(u8 src, bool mem);                // SBB  - Subtract register value from accumulator with borrow
+        void ana(u8 src, bool mem);                // ANA  - Logical AND register value with accumulator
+        void xra(u8 src, bool mem);                // XRA  - Logical XOR register value with accumulator
+        void ora(u8 src, bool mem);                // ORA  - Logical OR register value with accumulator
+        void cmp(u8 src, bool mem);                // CMP  - Compare register value with accumulator (subtract without storing result)
         void ret(Condition c);                     // Rcc  - Conditional return
         void pop(u16& reg16);                      // POP  - Pop 16 bit value from stack and store in extended register
         void ret();                                // RET  - Unconditional return
@@ -109,7 +109,7 @@ class CpuImpl : public Cpu
         void xchg();                               // XCHG - Exchange HL with DE
         void ei();                                 // EI   - Enable interrupts
         void call(Condition c, u16 addr);          // Ccc  - Conditional call
-        void push(u16& reg);                       // PUSH - Push extended register value into stack
+        void push(u16 reg);                        // PUSH - Push extended register value into stack
         void call(u16 addr);                       // CALL - Unconditional call
         void adi(u8 immedate);                     // ADI  - Add immedate to accumulator
         void aci(u8 immedate);                     // ACI  - Add immedate to accumulator with carry

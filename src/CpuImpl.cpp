@@ -13,12 +13,6 @@ CpuImpl::CpuImpl(const std::shared_ptr<Bus>& busPtr)
     , halted(false)
     , cycles(0)
 {
-    registers.getAf() = 0x0000;
-    registers.getBc() = 0x0000;
-    registers.getDe() = 0x0000;
-    registers.getHl() = 0x0000;
-    registers.getSp() = 0x0000;
-    registers.getPc() = 0x0000;
     auto& rawFlags = registers.getAf().getLow().raw;
     rawFlags = 0x2; // Set bit between Carry and Parity to 1
 }
@@ -512,7 +506,7 @@ void CpuImpl::lxi(u16& reg, u16 immedate)
     cycles += 10;
 }
 
-void CpuImpl::dad(u16& reg)
+void CpuImpl::dad(u16 reg)
 {
     // DAD - Double Add
     auto& hl = registers.getHl().getRaw();
@@ -523,11 +517,11 @@ void CpuImpl::dad(u16& reg)
     cycles += 10;
 }
 
-void CpuImpl::stax(u16& reg)
+void CpuImpl::stax(u16 reg)
 {
     // STAX - Store Accumulator Extended
     u16 addr = reg;
-    auto& accumulator = registers.getAf().getHigh();
+    const auto& accumulator = registers.getAf().getHigh();
     bus->writeIntoMemory(addr, accumulator);
     cycles += 7;
 }
@@ -544,12 +538,12 @@ void CpuImpl::shld(u16 addr)
 void CpuImpl::sta(u16 addr)
 {
     // STA - Store Accumulator
-    auto& accumulator = registers.getAf().getHigh();
+    const auto& accumulator = registers.getAf().getHigh();
     bus->writeIntoMemory(addr, accumulator);
     cycles += 13;
 }
 
-void CpuImpl::ldax(u16& reg)
+void CpuImpl::ldax(u16 reg)
 {
     // LDAX - Load Accumulator Extended
     u16 addr = reg;
@@ -710,7 +704,7 @@ void CpuImpl::cmc()
     cycles += 4;
 }
 
-void CpuImpl::mov(u8& destination, u8& source, bool mem)
+void CpuImpl::mov(u8& destination, u8 source, bool mem)
 {
     // MOV - Move register
     destination = source;
@@ -724,56 +718,56 @@ void CpuImpl::halt()
     cycles += 7;
 }
 
-void CpuImpl::add(u8& src, bool mem)
+void CpuImpl::add(u8 src, bool mem)
 {
     // ADD - Add to accumulator
     adi(src);
     cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::adc(u8& src, bool mem)
+void CpuImpl::adc(u8 src, bool mem)
 {
     // ADC - Add with Carry
     aci(src);
     cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::sub(u8& src, bool mem)
+void CpuImpl::sub(u8 src, bool mem)
 {
     // SUB - Subtract from accumulator
     sui(src);
     cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::sbb(u8& src, bool mem)
+void CpuImpl::sbb(u8 src, bool mem)
 {
     // SBB - Subtract with Borrow
     sbi(src);
     cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::ana(u8& src, bool mem)
+void CpuImpl::ana(u8 src, bool mem)
 {
     // ANA - And Accumulator
     ani(src);
     cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::xra(u8& src, bool mem)
+void CpuImpl::xra(u8 src, bool mem)
 {
     // XRA - Xor Accumulator
     xri(src);
     cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::ora(u8& src, bool mem)
+void CpuImpl::ora(u8 src, bool mem)
 {
     // ORA - Or Accumulator
     ori(src);
     cycles += mem ? 7 : 4;
 }
 
-void CpuImpl::cmp(u8& src, bool mem)
+void CpuImpl::cmp(u8 src, bool mem)
 {
     // CMP - Compare with accumulator
     cpi(src);
@@ -813,7 +807,7 @@ void CpuImpl::pop(u16& reg)
     cycles += 10;
 }
 
-void CpuImpl::push(u16& reg)
+void CpuImpl::push(u16 reg)
 {
     // PUSH - Push into stack
     pushIntoStack16(reg);
@@ -823,7 +817,7 @@ void CpuImpl::push(u16& reg)
 void CpuImpl::pchl()
 {
     // PCHL - Load PC from HL
-    auto& hl = registers.getHl().getRaw();
+    const auto& hl = registers.getHl().getRaw();
     auto& pc = registers.getPc();
     pc = hl;
     cycles += 5;
@@ -832,7 +826,7 @@ void CpuImpl::pchl()
 void CpuImpl::sphl()
 {
     // SPHL - Load SP from HL
-    auto& hl = registers.getHl().getRaw();
+    const auto& hl = registers.getHl().getRaw();
     auto& sp = registers.getSp();
     sp = hl;
     cycles += 5;
@@ -861,7 +855,7 @@ void CpuImpl::jmp(u16 addr)
 void CpuImpl::out(u8 port)
 {
     // OUT - Write to output port
-    auto& a = registers.getAf().getHigh();
+    const auto& a = registers.getAf().getHigh();
     bus->writeIntoOutputPort(port, a);
     cycles += 10;
 }
@@ -893,7 +887,7 @@ void CpuImpl::xthl()
 {
     // XTHL - Exchange HL with memory contents pointed by SP
     auto& hl = registers.getHl();
-    auto& sp = registers.getSp();
+    const auto& sp = registers.getSp();
     auto memLow = bus->readFromMemory(sp);
     auto memHigh = bus->readFromMemory(sp + 1);
     u16 memValue = memLow | (memHigh << 8);
@@ -1048,7 +1042,7 @@ void CpuImpl::ori(u8 immedate)
 void CpuImpl::cpi(u8 immedate)
 {
     // CPI - Compare Immedate
-    auto& accumulator = registers.getAf().getHigh();
+    const auto& accumulator = registers.getAf().getHigh();
     auto& flags = registers.getAf().getLow();
     u8 negatedImmedate = ~immedate + 1;
     flags.AC = (accumulator & 0xF) + (negatedImmedate & 0xF) > 0xF;

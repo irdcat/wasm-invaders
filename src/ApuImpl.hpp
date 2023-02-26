@@ -8,7 +8,7 @@ class ApuImpl : public Apu
     public:
         using AudioPlayCallback = std::function<void(unsigned index)>;
 
-        ApuImpl(AudioPlayCallback audioPlayCallback);
+        explicit ApuImpl(AudioPlayCallback audioPlayCallback);
 
         ~ApuImpl() = default;
 

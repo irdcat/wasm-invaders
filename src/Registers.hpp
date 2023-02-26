@@ -14,7 +14,7 @@ class Registers
     u16 pc;
 
     public:
-        Registers() = default;
+        Registers();
 
         ~Registers() = default;
 

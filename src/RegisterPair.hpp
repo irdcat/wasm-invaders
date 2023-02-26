@@ -16,6 +16,8 @@ class RegisterPair
     public:
         RegisterPair() = default;
 
+        RegisterPair(TRaw value);
+
         ~RegisterPair() = default;
 
         operator TRaw() const;
