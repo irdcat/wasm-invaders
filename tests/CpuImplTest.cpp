@@ -83,7 +83,7 @@ class CpuImplTest : public testing::Test
         const u8 OPCODE_MVI_M = 0x36;
         const u8 OPCODE_MVI_A = 0x3E;
 
-        const u8 OPCODE_RRC = 0x07;
+        const u8 OPCODE_RLC = 0x07;
         const u8 OPCODE_RRC = 0x0F;
         const u8 OPCODE_RAL = 0x17;
         const u8 OPCODE_RAR = 0x1F;
