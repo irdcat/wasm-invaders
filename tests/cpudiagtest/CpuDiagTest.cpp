@@ -68,7 +68,35 @@
 #define IMMEDATE_ARITHMETIC_INSTRUCTIONS \
              case 0xC6: case 0xCE: case 0xD6: case 0xDE: case 0xE6: case 0xEE: case 0xF6: case 0xFE:
 #define RST  case 0xC7: case 0xCF: case 0xD7: case 0xDF: case 0xE7: case 0xEF: case 0xF7: case 0xFF:
-             
+
+static const std::array<std::string, 8> registerTable = { 
+    "B", "C", "D", "E", "H", "L", "(HL)", "A" 
+    };
+static const std::array<std::string, 4> registerPairTable1 = { 
+    "BC", "DE", "HL", "SP" 
+    };
+static const std::array<std::string, 4> registerPairTable2 = { 
+    "BC", "DE", "HL", "AF" 
+    };
+static const std::array<std::string, 8> arithmeticInstructionsTable = {
+    "ADD", "ADC", "SUB", "SBB", "ANA", "XRA", "ORA", "CMP"
+    };
+static const std::array<std::string, 8> immedateArithmeticInstructionsTable = {
+    "ADI", "ACI", "SUI", "SBI", "ANI", "XRI", "ORI", "CPI"
+    };
+static const std::array<std::string, 8> conditionalJumpsTable = {
+    "JNZ", "JZ", "JNC", "JC", "JPO", "JPE", "JP", "JM"
+    };
+static const std::array<std::string, 8> conditionalCallsTable = {
+    "CNZ", "CZ", "CNC", "CC", "CPO", "CPE", "CP", "CM"
+    };
+static const std::array<std::string, 8> conditionalReturnsTable = {
+    "RNZ", "RZ", "RNC", "RC", "RPO", "RPE", "RP", "RM"
+    };
+static const std::array<std::string, 8> bitInstructionsTable = {
+    "RLC", "RRC", "RAL", "RAR", "DAA", "CMA", "STC", "CMC"
+    };
+
 
 class DiagnosticBusImpl
     : public Bus
@@ -115,38 +143,23 @@ class DiagnosticCpuImpl
             auto pc = getRegisters().getPc() - 1;
             u8 * mem = &bus->getMemoryLocationRef(pc);
 
-            static const std::array<std::string, 8> registerTable = { 
-                "B", "C", "D", "E", "H", "L", "(HL)", "A" 
-                };
-            static const std::array<std::string, 4> registerPairTable1 = { 
-                "BC", "DE", "HL", "SP" 
-                };
-            static const std::array<std::string, 4> registerPairTable2 = { 
-                "BC", "DE", "HL", "AF" 
-                };
-            static const std::array<std::string, 8> arithmeticInstructionsTable = {
-                "ADD", "ADC", "SUB", "SBB", "ANA", "XRA", "ORA", "CMP"
-                };
-            static const std::array<std::string, 8> immedateArithmeticInstructionsTable = {
-                "ADI", "ACI", "SUI", "SBI", "ANI", "XRI", "ORI", "CPI"
-                };
-            static const std::array<std::string, 8> conditionalJumpsTable = {
-                "JNZ", "JZ", "JNC", "JC", "JPO", "JPE", "JP", "JM"
-                };
-            static const std::array<std::string, 8> conditionalCallsTable = {
-                "CNZ", "CZ", "CNC", "CC", "CPO", "CPE", "CP", "CM"
-                };
-            static const std::array<std::string, 8> conditionalReturnsTable = {
-                "RNZ", "RZ", "RNC", "RC", "RPO", "RPE", "RP", "RM"
-                };
-            static const std::array<std::string, 8> bitInstructionsTable = {
-                "RLC", "RRC", "RAL", "RAR", "DAA", "CMA", "STC", "CMC"
-                };
+            unsigned operand16 = (*(mem + 1)) | (*(mem + 2) << 8);
+            unsigned operand8 = *(mem + 1);
 
-            executionLogFile
-                << "0x" 
-                << std::setfill('0') << std::setw(4) << std::uppercase << std::hex << pc 
-                << " : ";
+            auto operandRP1 = registerPairTable1[(opcode >> 4) & 0x3];
+            auto operandRP2 = registerPairTable2[(opcode >> 4) & 0x3];
+            auto operandRy = registerTable[(opcode >> 3 & 0x7)];
+            auto operandRz = registerTable[opcode & 0x7];
+
+            auto bitInstruction = bitInstructionsTable[(opcode >> 3) & 0x7];
+            auto arithmeticInstruction = arithmeticInstructionsTable[(opcode >> 3) & 0x7] + " ";
+            auto immedateArithmeticInstruction = immedateArithmeticInstructionsTable[(opcode >> 3) & 0x7] + " ";
+
+            auto conditionalReturn = conditionalReturnsTable[(opcode >> 3) & 0x7];
+            auto conditionalCall = conditionalCallsTable[(opcode >> 3) & 0x7] + " ";
+            auto conditionalJump = conditionalJumpsTable[(opcode >> 3) & 0x7] + " ";
+
+            executionLogFile << "0x" << std::setfill('0') << std::setw(4) << std::uppercase << std::hex << pc << " : " << std::dec;
 
             switch(opcode)
             {
@@ -154,76 +167,61 @@ class DiagnosticCpuImpl
                     executionLogFile << "NOP";
                     break;
                 LXI
-                {
-                    u16 operand = (*(mem + 1) << 8) | (*(mem + 2));
-                    executionLogFile << "LXI " << registerPairTable1[(opcode >> 4) & 0x3] << ", " << operand;
+                    executionLogFile << "LXI " << operandRP1 << ", " << std::hex << operand16 << std::dec;
                     break;
-                }
                 DAD
-                    executionLogFile << "DAD " << registerPairTable1[(opcode >> 4) & 0x3];
+                    executionLogFile << "DAD " << operandRP1;
                     break;
                 STAX
-                    executionLogFile << "STAX " << registerPairTable1[(opcode >> 4) & 0x3];
+                    executionLogFile << "STAX " << operandRP1;
                     break;
                 SHLD
-                {
-                    u16 destinationAddr = (*(mem + 1) << 8) | (*(mem + 2));
-                    executionLogFile << "SHLD " << destinationAddr;
+                    executionLogFile << "SHLD " << std::hex << operand16 << std::dec;
                     break;
-                }
                 STA
-                {
-                    u16 destinationAddr = (*(mem + 1) << 8) | (*(mem + 2));
-                    executionLogFile << "STA " << destinationAddr;
+                    executionLogFile << "STA " << std::hex << operand16 << std::dec;
                     break;
-                }
                 LDAX
-                    executionLogFile << "LDAX " << registerPairTable1[(opcode >> 4) & 0x3];
+                    executionLogFile << "LDAX " << operandRP1;
                     break;
                 LHLD
-                {
-                    u16 destinationAddr = (*(mem + 1) << 8) | (*(mem + 2));
-                    executionLogFile << "LHLD " << destinationAddr;
+                    executionLogFile << "LHLD " << std::hex << operand16 << std::dec;
                     break;
-                }
                 LDA
-                {
-                    u16 destinationAddr = (*(mem + 1) << 8) | (*(mem + 2));
-                    executionLogFile << "LDA " << destinationAddr;
+                    executionLogFile << "LDA " << std::hex << operand16 << std::dec;
                     break;
-                }
                 INX
-                    executionLogFile << "INX " << registerPairTable1[(opcode >> 4) & 0x3];
+                    executionLogFile << "INX " << operandRP1;
                     break;
                 DCX
-                    executionLogFile << "DCX " << registerPairTable1[(opcode >> 4) & 0x3];
+                    executionLogFile << "DCX " << operandRP1;
                     break;
                 INR
-                    executionLogFile << "INR " << registerTable[(opcode >> 3 & 0x7)];
+                    executionLogFile << "INR " << operandRy;
                     break;
                 DCR
-                    executionLogFile << "DCR " << registerTable[(opcode >> 3 & 0x7)];
+                    executionLogFile << "DCR " << operandRy;
                     break;
                 MVI
-                    executionLogFile << "MVI " << registerTable[(opcode >> 3 & 0x7)] << ", " << (unsigned)*(mem + 1);
+                    executionLogFile << "MVI " << operandRy << ", " << std::hex << operand8 << std::dec;
                     break;
                 BIT_INSTRUCTIONS
-                    executionLogFile << bitInstructionsTable[(opcode >> 3 & 0x7)];
+                    executionLogFile << bitInstruction;
                     break;
                 MOV
-                    executionLogFile << "MOV " << registerTable[(opcode >> 3 & 0x7)] << ", " << registerTable[opcode & 0x7];
+                    executionLogFile << "MOV " << operandRy << ", " << operandRz;
                     break;
                 HLT
                     executionLogFile << "HLT";
                     break;    
                 ARITHMETIC_INSTRUCTIONS
-                    executionLogFile << arithmeticInstructionsTable[(opcode >> 3) & 0x7] << " " << registerTable[opcode & 0x7];
+                    executionLogFile << arithmeticInstruction << operandRz;
                     break;
                 RETURNS
-                    executionLogFile << (opcode & 0x1 ? "RET " : conditionalReturnsTable[(opcode >> 3) & 0x7]);
+                    executionLogFile << (opcode & 0x1 ? "RET " : conditionalReturn);
                     break;
                 POP
-                    executionLogFile << "POP " << registerPairTable2[(opcode >> 4) & 0x3];
+                    executionLogFile << "POP " << operandRP2;
                     break;
                 PCHL
                     executionLogFile << "PCHL";
@@ -232,20 +230,10 @@ class DiagnosticCpuImpl
                     executionLogFile << "SPHL";
                     break;
                 JUMPS
-                {
-                    u16 destinationAddr = (*(mem + 1) << 8) | (*(mem + 2));
-                    if(opcode & 0x1)
-                    {
-                        executionLogFile << "JMP " << destinationAddr;
-                    }
-                    else
-                    {
-                        executionLogFile << conditionalJumpsTable[(opcode >> 3) & 0x7] << " " << destinationAddr;
-                    }
+                    executionLogFile << (opcode & 0x1 ? "JMP " : conditionalJump) << std::hex << operand16 << std::dec;
                     break;
-                }
                 OUT
-                    executionLogFile << "OUT " << (unsigned)*(mem + 1);
+                    executionLogFile << "OUT " << std::hex << operand8 << std::dec;
                     break;
                 XTHL
                     executionLogFile << "XTHL";
@@ -254,7 +242,7 @@ class DiagnosticCpuImpl
                     executionLogFile << "DI";
                     break;
                 IN
-                    executionLogFile << "IN " << (unsigned)*(mem + 1);
+                    executionLogFile << "IN " << std::hex << operand8 << std::dec;
                     break;
                 XCHG
                     executionLogFile << "XCHG";
@@ -263,31 +251,20 @@ class DiagnosticCpuImpl
                     executionLogFile << "EI";
                     break;
                 CALLS
-                {
-                    u16 destinationAddr = (*(mem + 1) << 8) | (*(mem + 2));
-                    if(opcode & 0x1)
-                    {
-                        executionLogFile << "CALL " << destinationAddr;
-                    }
-                    else
-                    {
-                        executionLogFile << conditionalCallsTable[(opcode >> 3) & 0x7] << " " << destinationAddr;
-                    }
+                    executionLogFile << (opcode & 0x1 ? "CALL " : conditionalCall) << std::hex << operand16 << std::dec;
                     break;
-                }
                 PUSH
-                    executionLogFile << "PUSH " << registerPairTable2[(opcode >> 4) & 0x3];
+                    executionLogFile << "PUSH " << operandRP2;
                     break;
                 IMMEDATE_ARITHMETIC_INSTRUCTIONS
-                    executionLogFile 
-                        << immedateArithmeticInstructionsTable[(opcode >> 3) & 0x7]
-                        << " " << registerTable[opcode & 0x7] << ", " << (unsigned)*(mem + 1);
+                    executionLogFile << immedateArithmeticInstruction << operandRz << ", " << std::hex << operand8 << std::dec;
                     break;
                 RST
                     executionLogFile << "RST " << (unsigned)((opcode >> 3) & 0x7);
                     break;
                 default:
-                    executionLogFile << "Unknown instruction " << (unsigned) opcode;
+                    executionLogFile << "Unknown instruction " << std::hex << opcode << std::dec;
+                    break;
             }
 
             executionLogFile << std::endl;
