@@ -159,7 +159,20 @@ class DiagnosticCpuImpl
             auto conditionalCall = conditionalCallsTable[(opcode >> 3) & 0x7] + " ";
             auto conditionalJump = conditionalJumpsTable[(opcode >> 3) & 0x7] + " ";
 
-            executionLogFile << "0x" << std::setfill('0') << std::setw(4) << std::uppercase << std::hex << pc << " : " << std::dec;
+            executionLogFile << "PC: " << std::setfill('0') << std::setw(4) << std::uppercase << std::hex << pc << " ";
+            executionLogFile << "AF: " << std::setfill('0') << std::setw(4) << std::uppercase << this->getRegisters().getAf().getRaw() << " ";
+            executionLogFile << "BC: " << std::setfill('0') << std::setw(4) << std::uppercase << this->getRegisters().getBc().getRaw() << " ";
+            executionLogFile << "DE: " << std::setfill('0') << std::setw(4) << std::uppercase << this->getRegisters().getDe().getRaw() << " ";
+            executionLogFile << "HL: " << std::setfill('0') << std::setw(4) << std::uppercase << this->getRegisters().getHl().getRaw() << " ";
+            executionLogFile << "SP: " << std::setfill('0') << std::setw(4) << std::uppercase << this->getRegisters().getSp() << " ";
+            executionLogFile << "Flags: {"
+                            << " C: " << (unsigned) this->getRegisters().getAf().getLow().C
+                            << " P: " << (unsigned) this->getRegisters().getAf().getLow().P
+                            << " AC: " << (unsigned) this->getRegisters().getAf().getLow().AC
+                            << " Z: " << (unsigned) this->getRegisters().getAf().getLow().Z
+                            << " S: " << (unsigned) this->getRegisters().getAf().getLow().S
+                            << "} ";
+            executionLogFile << "Cycles: " << std::dec << std::setfill(' ') << std::setw(7) << std::left << this->cycleCount() << " " << std::right;
 
             switch(opcode)
             {
@@ -257,7 +270,7 @@ class DiagnosticCpuImpl
                     executionLogFile << "PUSH " << operandRP2;
                     break;
                 IMMEDATE_ARITHMETIC_INSTRUCTIONS
-                    executionLogFile << immedateArithmeticInstruction << operandRz << ", " << std::hex << operand8 << std::dec;
+                    executionLogFile << immedateArithmeticInstruction << std::hex << operand8 << std::dec;
                     break;
                 RST
                     executionLogFile << "RST " << (unsigned)((opcode >> 3) & 0x7);
@@ -327,7 +340,7 @@ int main()
                 if(c == 0x9)
                 {
                     auto addr = de;
-                    char * data = reinterpret_cast<char*>(&bus->getMemoryLocationRef(addr + 3));
+                    char * data = reinterpret_cast<char*>(&bus->getMemoryLocationRef(addr));
                     while(*data != '$')
                     {
                         std::cout << *data++;
@@ -353,7 +366,7 @@ int main()
         }
     };
 
-    executeTest("TEST.COM");
+    executeTest("TST8080.COM");
 
     return 0;
 }

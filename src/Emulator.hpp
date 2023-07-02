@@ -40,9 +40,9 @@ class Emulator
         std::shared_ptr<Apu> apu;
         std::shared_ptr<ShiftRegister> shiftRegister;
 
-        SdlResource<SDL_Window> window;
-        SdlResource<SDL_Renderer> renderer;
         SdlResource<SDL_Texture> texture;
+        SdlResource<SDL_Renderer> renderer;
+        SdlResource<SDL_Window> window;
 
         static const constexpr unsigned DISPLAY_WIDTH = 224;
         static const constexpr unsigned DISPLAY_HEIGHT = 256;
