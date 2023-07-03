@@ -531,7 +531,7 @@ void CpuImpl::shld(u16 addr)
     // SHLD - Store HL Direct
     auto& hl = registers.getHl();
     bus->writeIntoMemory(addr, hl.getLow());
-    bus->writeIntoMemory(addr, hl.getHigh());
+    bus->writeIntoMemory(addr + 1, hl.getHigh());
     cycles += 16;
 }
 
