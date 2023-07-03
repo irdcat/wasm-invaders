@@ -972,7 +972,7 @@ void CpuImpl::sui(u8 immedate)
     auto& flags = registers.getAf().getLow();
     i16 result = accumulator - immedate;
     flags.AC = (~(accumulator ^ result ^ immedate) >> 4) & 0x1;
-    flags.C = !((result >> 8) & 0x1);
+    flags.C = (result >> 8) & 0x1;
     accumulator = result & 0xFF;
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
@@ -985,9 +985,9 @@ void CpuImpl::sbi(u8 immedate)
     // SBI - Subtract Immedate with Borrow
     auto& accumulator = registers.getAf().getHigh();
     auto& flags = registers.getAf().getLow();
-    i16 result = accumulator - immedate;
+    i16 result = accumulator - immedate - flags.C;
     flags.AC = (~(accumulator ^ result ^ immedate) >> 4) & 0x1;
-    flags.C = !((result >> 8) & 0x1);
+    flags.C = (result >> 8) & 0x1;
     accumulator = result & 0xFF;
     flags.Z = accumulator == 0;
     flags.S = (accumulator >> 7) & 0x1;
