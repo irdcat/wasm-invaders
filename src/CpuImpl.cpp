@@ -970,9 +970,8 @@ void CpuImpl::sui(u8 immedate)
     // SUI - Subtract Immedate
     auto& accumulator = registers.getAf().getHigh();
     auto& flags = registers.getAf().getLow();
-    u8 negatedImmedate = ~immedate + 1;
-    flags.AC = (accumulator & 0xF) + (negatedImmedate & 0xF) > 0xF;
-    unsigned result = accumulator + negatedImmedate;
+    i16 result = accumulator - immedate;
+    flags.AC = (~(accumulator ^ result ^ immedate) >> 4) & 0x1;
     flags.C = !((result >> 8) & 0x1);
     accumulator = result & 0xFF;
     flags.Z = accumulator == 0;
@@ -986,9 +985,8 @@ void CpuImpl::sbi(u8 immedate)
     // SBI - Subtract Immedate with Borrow
     auto& accumulator = registers.getAf().getHigh();
     auto& flags = registers.getAf().getLow();
-    u8 negatedImmedate = ~(immedate + flags.C) + 1;
-    flags.AC = (accumulator & 0xF) + (negatedImmedate & 0xF) > 0xF;
-    unsigned result = accumulator + negatedImmedate;
+    i16 result = accumulator - immedate;
+    flags.AC = (~(accumulator ^ result ^ immedate) >> 4) & 0x1;
     flags.C = !((result >> 8) & 0x1);
     accumulator = result & 0xFF;
     flags.Z = accumulator == 0;
@@ -1044,11 +1042,10 @@ void CpuImpl::cpi(u8 immedate)
     // CPI - Compare Immedate
     const auto& accumulator = registers.getAf().getHigh();
     auto& flags = registers.getAf().getLow();
-    u8 negatedImmedate = ~immedate + 1;
-    flags.AC = (accumulator & 0xF) + (negatedImmedate & 0xF) > 0xF;
-    unsigned result = accumulator + negatedImmedate;
-    flags.C = !((result >> 8) & 0x1);
-    result = result & 0xFF;
+    i16 result = accumulator - immedate;
+    flags.AC = (~(accumulator ^ result ^ immedate) >> 4) & 0x1;
+    flags.C = (result >> 8) & 0x1;
+    result &= 0xFF;
     flags.Z = result == 0;
     flags.S = (result >> 7) & 0x1;
     flags.P = checkParity(result);
