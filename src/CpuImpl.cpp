@@ -728,56 +728,56 @@ void CpuImpl::add(u8 src, bool mem)
 {
     // ADD - Add to accumulator
     adi(src);
-    cycles += mem ? 7 : 4;
+    cycles -= mem ? 0 : 3;
 }
 
 void CpuImpl::adc(u8 src, bool mem)
 {
     // ADC - Add with Carry
     aci(src);
-    cycles += mem ? 7 : 4;
+    cycles -= mem ? 0 : 3;
 }
 
 void CpuImpl::sub(u8 src, bool mem)
 {
     // SUB - Subtract from accumulator
     sui(src);
-    cycles += mem ? 7 : 4;
+    cycles -= mem ? 0 : 3;
 }
 
 void CpuImpl::sbb(u8 src, bool mem)
 {
     // SBB - Subtract with Borrow
     sbi(src);
-    cycles += mem ? 7 : 4;
+    cycles -= mem ? 0 : 3;
 }
 
 void CpuImpl::ana(u8 src, bool mem)
 {
     // ANA - And Accumulator
     ani(src);
-    cycles += mem ? 7 : 4;
+    cycles -= mem ? 0 : 3;
 }
 
 void CpuImpl::xra(u8 src, bool mem)
 {
     // XRA - Xor Accumulator
     xri(src);
-    cycles += mem ? 7 : 4;
+    cycles -= mem ? 0 : 3;
 }
 
 void CpuImpl::ora(u8 src, bool mem)
 {
     // ORA - Or Accumulator
     ori(src);
-    cycles += mem ? 7 : 4;
+    cycles -= mem ? 0 : 3;
 }
 
 void CpuImpl::cmp(u8 src, bool mem)
 {
     // CMP - Compare with accumulator
     cpi(src);
-    cycles += mem ? 7 : 4;
+    cycles -= mem ? 0 : 3;
 }
 
 void CpuImpl::ret(Condition c)
