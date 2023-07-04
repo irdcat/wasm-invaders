@@ -661,22 +661,28 @@ void CpuImpl::daa()
 {
     // DAA - Decimal Adjust Accumulator
     auto& accumulator = registers.getAf().getHigh();
-    std::remove_reference_t<decltype(accumulator)> temp = 0;
     auto& flags = registers.getAf().getLow();
-    if ((accumulator & 0xF) > 0x9 || flags.AC)
-    {
-        flags.AC = (accumulator & 0xF) > 0x9;
-        temp |= 0x6;
+    u8 lsb = accumulator & 0x0F;
+    u8 msb = accumulator >> 4;
+    u8 correction = 0;
+    bool newCarry = flags.C;
+    
+    if(flags.AC || lsb > 9) {
+        correction += 0x06;
     }
-    if (((accumulator >> 4) & 0xF) > 0x9 || flags.C)
-    {
-        flags.C = ((accumulator >> 4) & 0xF) > 0x9;
-        temp |= ((accumulator >> 4) + 0x6) << 4;
+
+    if(flags.C || msb > 9 || (msb >= 9 && lsb > 9)) {
+        correction += 0x60;
+        newCarry = 1;
     }
-    accumulator = temp;
+
+    i16 result = accumulator + correction + newCarry;
+    flags.AC = ((result ^ accumulator ^ correction) >> 4) & 0x1;
+    accumulator = result & 0xFF;
     flags.Z = accumulator == 0;
-    flags.S = (accumulator >> 7) & 0x1;
+    flags.S = accumulator >> 7;
     flags.P = checkParity(accumulator);
+    flags.C = newCarry;
     cycles += 4;
 }
 
