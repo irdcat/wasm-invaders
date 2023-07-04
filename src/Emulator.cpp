@@ -184,8 +184,7 @@ void Emulator::updateScreen()
     Uint32 format = 0;
     int pitch = 0;
     SDL_QueryTexture(texture.get(), &format, nullptr, nullptr, nullptr);
-    SDL_PixelFormat pixelFormat;
-    pixelFormat.format = format;
+    auto pixelFormat = make_sdl_resource(SDL_AllocFormat, SDL_FreeFormat, format);
     SDL_LockTexture(texture.get(), nullptr, reinterpret_cast<void**>(&renderBuffer), &pitch);
     for(unsigned byte = 0; byte < vram.size(); byte++)
     {
@@ -194,7 +193,7 @@ void Emulator::updateScreen()
         auto data = vram[byte];
         for(unsigned bit = 0; bit < 8; bit++)
         {
-            Uint32 color = SDL_MapRGB(&pixelFormat, 0, 0, 0);
+            Uint32 color = SDL_MapRGB(pixelFormat.get(), 0, 0, 0);
             unsigned px = x + bit;
             unsigned py = y;
             if((data >> bit) & 1)
@@ -202,20 +201,20 @@ void Emulator::updateScreen()
                 if(px < 16)
                 {
                     color = py < 16 || py > 134 
-                        ? SDL_MapRGB(&pixelFormat, 255, 255, 255) 
-                        : SDL_MapRGB(&pixelFormat, 0, 255, 0);
+                        ? SDL_MapRGB(pixelFormat.get(), 255, 255, 255) 
+                        : SDL_MapRGB(pixelFormat.get(), 0, 255, 0);
                 }
                 else if(px >= 16 && px <= 72)
                 {
-                    color = SDL_MapRGB(&pixelFormat, 0, 255, 0);
+                    color = SDL_MapRGB(pixelFormat.get(), 0, 255, 0);
                 }
                 else if(px >= 192 && px < 224)
                 {
-                    color = SDL_MapRGB(&pixelFormat, 255, 0, 0);
+                    color = SDL_MapRGB(pixelFormat.get(), 255, 0, 0);
                 }
                 else
                 {
-                    color = SDL_MapRGB(&pixelFormat, 255, 255, 255);
+                    color = SDL_MapRGB(pixelFormat.get(), 255, 255, 255);
                 }
             }
 
