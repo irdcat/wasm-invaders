@@ -28,10 +28,6 @@ npm install -g http-server
 http-server ./
 ```
 
-### Running
-
-Open localhost:8080/wasm-invaders.html in the browser
-
 ## Building & Running tests
 
 ### Building
@@ -42,11 +38,6 @@ Building tests
 ```
 
 ### Running
-
-Running unit-tests
-```
-.\unit-tests.ps1
-```
 
 Running cpu diagnostics tests
 ```
