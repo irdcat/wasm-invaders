@@ -678,7 +678,7 @@ void CpuImpl::daa()
 
     i16 result = accumulator + correction + newCarry;
     flags.AC = ((result ^ accumulator ^ correction) >> 4) & 0x1;
-    accumulator = result & 0xFF;
+    accumulator = (result - newCarry) & 0xFF;
     flags.Z = accumulator == 0;
     flags.S = accumulator >> 7;
     flags.P = checkParity(accumulator);
