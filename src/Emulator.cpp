@@ -24,9 +24,11 @@ Emulator::Emulator()
     , inputs(std::make_shared<InputsImpl>())
     , memory(std::make_shared<MemoryImpl>())
 {
-    memory = std::make_shared<MemoryImpl>();
-    apu = std::make_shared<ApuImpl>([](unsigned index){
-        //TODO: Audio play callback
+    apu = std::make_shared<ApuImpl>([this](unsigned index){
+        // Prevent same sounds from overlapping
+        if(!Mix_Playing(index)) {
+            Mix_PlayChannel(index, this->sounds[index].get(), 0);
+        }
     });
     bus = std::make_shared<BusImpl>(memory, inputs, apu, shiftRegister);
     cpu = std::make_shared<CpuImpl>(bus);
@@ -38,6 +40,7 @@ Emulator::Emulator()
 
 Emulator::~Emulator()
 {
+    Mix_CloseAudio();
     SDL_Quit();
 }
 
@@ -55,9 +58,7 @@ void Emulator::run()
         update(deltaTime);
         render();
 
-        #ifdef __EMSCRIPTEN__
-        emscripten_sleep(0);
-        #endif
+        emscripten_sleep(16 - currentTime);
 
         lastTime = currentTime;
     }
@@ -65,12 +66,23 @@ void Emulator::run()
 
 void Emulator::initializeSdlResources()
 {
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) 
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         throw std::system_error(
             errno, 
             std::generic_category(), 
             std::string("Unable to initialize SDL: ") + std::string(SDL_GetError())
             );
+    }
+
+    if(Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) != 0) {
+        throw std::system_error(
+            errno,
+            std::generic_category(),
+            std::string("Unable to initialize SDL_mixer: " + std::string(SDL_GetError()))
+            );
+    }
+
+    Mix_Volume(-1, AUDIO_VOLUME);
 
     window = make_sdl_resource(
         SDL_CreateWindow, 
@@ -130,6 +142,18 @@ void Emulator::loadRoms()
         
         for(const auto& byte : data)
             this->memory->write(startAddr++, byte);
+    };
+
+    sounds = {
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/ufo_lowpitch.wav", "rb"), 1),
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/shoot.wav", "rb"), 1),
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/explosion.wav", "rb"), 1),
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/invaderkilled.wav", "rb"), 1),
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/fastinvader1.wav", "rb"), 1),
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/fastinvader2.wav", "rb"), 1),
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/fastinvader3.wav", "rb"), 1),
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/fastinvader4.wav", "rb"), 1),
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/ufo_highpitch.wav", "rb"), 1)
     };
 
     for(const auto& rom : romInfoArray)

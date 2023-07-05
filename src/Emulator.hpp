@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <SDL2/SDL_mixer.h>
 
 #include "Apu.hpp"
 #include "Bus.hpp"
@@ -44,10 +45,13 @@ class Emulator
         SdlResource<SDL_Renderer> renderer;
         SdlResource<SDL_Window> window;
 
+        std::array<SdlResource<Mix_Chunk>, 9> sounds;
+
+        static const constexpr int AUDIO_VOLUME = MIX_MAX_VOLUME / 2;
         static const constexpr unsigned DISPLAY_WIDTH = 224;
         static const constexpr unsigned DISPLAY_HEIGHT = 256;
         static const constexpr unsigned PIXEL_SIZE = 2;
         static const constexpr unsigned FRAMES_PER_SECOND = 60;
-        static const constexpr unsigned CYCLES_PER_SECOND = 1996800 * 5;
+        static const constexpr unsigned CYCLES_PER_SECOND = 1996800;
         static const constexpr unsigned CYCLES_PER_FRAME = CYCLES_PER_SECOND / FRAMES_PER_SECOND;
 };

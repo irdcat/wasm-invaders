@@ -21,6 +21,19 @@ auto make_sdl_resource(Creator creator, Destructor destructor, Args&&... args)
     return std::unique_ptr<std::decay_t<decltype(*resource)>, decltype(destructor)>(resource, destructor);
 }
 
+template<typename Creator, typename Destructor, typename Arg>
+auto make_sdl_resource(Creator creator, Destructor destructor, Arg arg) 
+{
+    auto resource = creator(std::forward<Arg>(arg));
+    if(!resource)
+        throw std::system_error(
+            errno, 
+            std::generic_category(), 
+            std::string("Could not create") + std::string(TYPENAME_STRING(decltype(*resource))) + std::string(SDL_GetError())
+            );
+    return std::unique_ptr<std::decay_t<decltype(*resource)>, decltype(destructor)>(resource, destructor);
+}
+
 template <typename T>
 using SdlDeleter = std::function<void(T*)>;
 
