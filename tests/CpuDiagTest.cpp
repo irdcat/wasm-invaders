@@ -5,8 +5,8 @@
 #include <memory>
 #include <iomanip>
 
-#include "../../src/CpuImpl.hpp"
-#include "../../src/Bus.hpp"
+#include "../src/CpuImpl.hpp"
+#include "../src/Bus.hpp"
 
 #define NOP  case 0x00:
 #define LXI  case 0x01: case 0x11: case 0x21: case 0x31:

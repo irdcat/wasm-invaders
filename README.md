@@ -39,7 +39,7 @@ Building tests
 
 ### Running
 
-Running cpu diagnostics tests
+Running tests
 ```
-.\cpu-diag-tests.ps1
+.\run-tests.ps1
 ```

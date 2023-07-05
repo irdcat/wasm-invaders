@@ -31,12 +31,12 @@ if(NOT EMSCRIPTEN)
         src/ShiftRegisterImpl.cpp
         src/Registers.cpp
     )
-    set(CPU_DIAG_TEST_SOURCES
-        tests/cpudiagtest/CpuDiagTest.cpp
+    set(TEST_SOURCES
+        tests/CpuDiagTest.cpp
     )
     set(CXX_STANDARD 17)
 
     add_library(wasm-invaders ${APP_LIB_SOURCES})
-    add_executable(cpu-diag-tests ${CPU_DIAG_TEST_SOURCES})
+    add_executable(cpu-diag-tests ${TEST_SOURCES})
     target_link_libraries(cpu-diag-tests wasm-invaders)
 endif()
