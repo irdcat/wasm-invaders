@@ -12,11 +12,12 @@ if(EMSCRIPTEN)
         src/ShiftRegisterImpl.cpp
         src/Registers.cpp
         src/Emulator.cpp
-        src/main.cpp
+        src/api.cpp
     )
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    set(CMAKE_EXECUTABLE_SUFFIX ".js")
     set(CXX_STANDARD 17)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2 -s ASYNCIFY -s ALLOW_MEMORY_GROWTH=1 -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sWASM=1 -sUSE_SDL=2 -sASYNCIFY -sALLOW_MEMORY_GROWTH=1 -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -sEXPORTED_FUNCTIONS=_run -sEXPORTED_RUNTIME_METHODS=ccall")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file ${ROMS_DIR}")
     add_executable(wasm-invaders ${APP_SOURCES})
 endif()

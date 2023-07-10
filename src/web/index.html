@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@3.2.1/dist/full.css" rel="stylesheet" type="text/css"/>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="m-0 p-0 bg-slate-900">
+        <div class="p-2 m-0 absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 box-border bg-slate-300 rounded-xl">
+            <div id="loading-container">
+                <span class="loading loading-spinner loading-lg text-accent"></span>
+            </div>
+            <div id="run-button-container" style="display: none">
+                <button onclick="run_emulator()" type="button" class="btn btn-sm btn-accent">Run</button>
+            </div>
+            <div id="emulator-container" style="display: none">
+                <canvas oncontextmenu="event.preventDefault()" id="canvas" width="448" height="512" class="bg-gray-950"></canvas>
+            </div>
+        </div>
+        <script src="index.js"></script>
+        <script src="wasm-invaders.js"></script>
+    </body>
+</html>
