@@ -2,8 +2,3 @@
 obj
 
 build/*
-
-*.data
-*.html
-*.js
-*.wasm
