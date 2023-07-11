@@ -141,7 +141,7 @@ bool Emulator::loadRoms()
     };
 
     sounds = {
-        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/ufo_lowpitch.wav", "rb"), 1),
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/ufo_highpitch.wav", "rb"), 1),
         make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/shoot.wav", "rb"), 1),
         make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/explosion.wav", "rb"), 1),
         make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/invaderkilled.wav", "rb"), 1),
@@ -149,7 +149,7 @@ bool Emulator::loadRoms()
         make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/fastinvader2.wav", "rb"), 1),
         make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/fastinvader3.wav", "rb"), 1),
         make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/fastinvader4.wav", "rb"), 1),
-        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/ufo_highpitch.wav", "rb"), 1)
+        make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/ufo_lowpitch.wav", "rb"), 1)
     };
 
     for(const auto& sound : sounds) {
