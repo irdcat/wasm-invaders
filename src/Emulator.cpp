@@ -3,12 +3,8 @@
 #include <string>
 #include <fstream>
 #include <utility>
-#include <system_error>
 #include <SDL2/SDL.h>
-
-#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
-#endif
 
 #include "ApuImpl.hpp"
 #include "BusImpl.hpp"
@@ -33,15 +29,11 @@ Emulator::Emulator()
     bus = std::make_shared<BusImpl>(memory, inputs, apu, shiftRegister);
     cpu = std::make_shared<CpuImpl>(bus);
 
-    initializeSdlResources();
-    loadRoms();
-    shouldRun = true;
+    shouldRun = initializeSdlResources() && loadRoms();
 }
 
 Emulator::~Emulator()
 {
-    Mix_CloseAudio();
-    SDL_Quit();
 }
 
 void Emulator::run()
@@ -49,8 +41,7 @@ void Emulator::run()
     uint64_t currentTime = 0;
     uint64_t lastTime = 0;
     uint64_t deltaTime = 0;
-    while(shouldRun)
-    {
+    while(shouldRun) {
         currentTime = SDL_GetTicks64();
         deltaTime = currentTime - lastTime;
 
@@ -64,22 +55,14 @@ void Emulator::run()
     }
 }
 
-void Emulator::initializeSdlResources()
+bool Emulator::initializeSdlResources()
 {
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
-        throw std::system_error(
-            errno, 
-            std::generic_category(), 
-            std::string("Unable to initialize SDL: ") + std::string(SDL_GetError())
-            );
+        return false;
     }
 
     if(Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) != 0) {
-        throw std::system_error(
-            errno,
-            std::generic_category(),
-            std::string("Unable to initialize SDL_mixer: " + std::string(SDL_GetError()))
-            );
+        return false;
     }
 
     Mix_Volume(-1, AUDIO_VOLUME);
@@ -92,16 +75,23 @@ void Emulator::initializeSdlResources()
         SDL_WINDOWPOS_CENTERED, 
         DISPLAY_WIDTH * PIXEL_SIZE, 
         DISPLAY_HEIGHT * PIXEL_SIZE, 
-        SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
-        );
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+
+    if(!window) {
+        return false;
+    }
     
     renderer = make_sdl_resource(
         SDL_CreateRenderer,
         SDL_DestroyRenderer,
         window.get(),
         -1,
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
-    );
+        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+    if(!renderer) {
+        return false;
+    }
+
     SDL_RenderSetLogicalSize(renderer.get(), DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
     texture = make_sdl_resource(
@@ -111,11 +101,16 @@ void Emulator::initializeSdlResources()
         SDL_PIXELFORMAT_RGBA32,
         SDL_TEXTUREACCESS_STREAMING,
         DISPLAY_WIDTH,
-        DISPLAY_HEIGHT
-    );
+        DISPLAY_HEIGHT);
+
+    if(!texture) {
+        return false;
+    }
+
+    return true;
 }
 
-void Emulator::loadRoms()
+bool Emulator::loadRoms()
 {
     using RomInfoArray = std::array<std::pair<std::string, u16>, 4>;
     const RomInfoArray romInfoArray = {{
@@ -140,8 +135,9 @@ void Emulator::loadRoms()
         std::vector<u8> data(fileSize);
         file.read((char *) &data[0], fileSize);
         
-        for(const auto& byte : data)
+        for(const auto& byte : data) {
             this->memory->write(startAddr++, byte);
+        }
     };
 
     sounds = {
@@ -156,18 +152,24 @@ void Emulator::loadRoms()
         make_sdl_resource(Mix_LoadWAV_RW, Mix_FreeChunk, SDL_RWFromFile("roms/ufo_highpitch.wav", "rb"), 1)
     };
 
-    for(const auto& rom : romInfoArray)
+    for(const auto& sound : sounds) {
+        if(!sound) {
+            return false;
+        }
+    }
+
+    for(const auto& rom : romInfoArray) {
         fileReader(rom.first, rom.second);
+    }
+
+    return true;
 }
 
 void Emulator::handleInput()
 {
     static SDL_Event event;
-    while(SDL_PollEvent(&event) != 0)
-    {
-        if (event.type == SDL_QUIT)
-            shouldRun = false;
-        else if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
+    while(SDL_PollEvent(&event) != 0) {
+        if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
             handleKeyEvent(event);
     }
 }
@@ -178,15 +180,13 @@ void Emulator::update(uint32_t dt)
     static const u8 RST_8 = 0xCF;
     static u8 currentInterrupt = RST_8;
     unsigned cycleCount = 0;
-    while(cycleCount < dt * CYCLES_PER_SECOND / 1000)
-    {
+    while(cycleCount < dt * CYCLES_PER_SECOND / 1000) {
         cycleCount += cpu->step();
-        if(cpu->cycleCount() >= CYCLES_PER_FRAME / 2)
-        {
+        if(cpu->cycleCount() >= CYCLES_PER_FRAME / 2) {
             cpu->subtractFromCycleCount(CYCLES_PER_FRAME / 2);
             cpu->interrupt(currentInterrupt);
-            if(currentInterrupt == RST_10) // VBLANK
-            {
+            if(currentInterrupt == RST_10) {
+                // VBLANK Interrupt
                 updateScreen();
             }
             currentInterrupt = currentInterrupt == RST_8 ? RST_10 : RST_8;
@@ -210,34 +210,24 @@ void Emulator::updateScreen()
     SDL_QueryTexture(texture.get(), &format, nullptr, nullptr, nullptr);
     auto pixelFormat = make_sdl_resource(SDL_AllocFormat, SDL_FreeFormat, format);
     SDL_LockTexture(texture.get(), nullptr, reinterpret_cast<void**>(&renderBuffer), &pitch);
-    for(unsigned byte = 0; byte < vram.size(); byte++)
-    {
+    for(unsigned byte = 0; byte < vram.size(); byte++) {
         const unsigned y = (byte * 8) / DISPLAY_HEIGHT;
         const unsigned x = (byte * 8) % DISPLAY_HEIGHT;
         auto data = vram[byte];
-        for(unsigned bit = 0; bit < 8; bit++)
-        {
+        for(unsigned bit = 0; bit < 8; bit++) {
             Uint32 color = SDL_MapRGB(pixelFormat.get(), 0, 0, 0);
             unsigned px = x + bit;
             unsigned py = y;
-            if((data >> bit) & 1)
-            {
-                if(px < 16)
-                {
+            if((data >> bit) & 1) {
+                if(px < 16) {
                     color = py < 16 || py > 134 
                         ? SDL_MapRGB(pixelFormat.get(), 255, 255, 255) 
                         : SDL_MapRGB(pixelFormat.get(), 0, 255, 0);
-                }
-                else if(px >= 16 && px <= 72)
-                {
+                } else if(px >= 16 && px <= 72) {
                     color = SDL_MapRGB(pixelFormat.get(), 0, 255, 0);
-                }
-                else if(px >= 192 && px < 224)
-                {
+                } else if(px >= 192 && px < 224) {
                     color = SDL_MapRGB(pixelFormat.get(), 255, 0, 0);
-                }
-                else
-                {
+                } else {
                     color = SDL_MapRGB(pixelFormat.get(), 255, 255, 255);
                 }
             }
@@ -255,8 +245,7 @@ void Emulator::handleKeyEvent(const SDL_Event &event)
 {
     auto key = event.key.keysym.scancode;
     auto pressed = event.type == SDL_KEYDOWN;
-    switch (key)
-    {
+    switch (key) {
         case SDL_SCANCODE_C:
             inputs->setCredit(pressed);
             break;
@@ -283,13 +272,6 @@ void Emulator::handleKeyEvent(const SDL_Event &event)
             break;
         case SDL_SCANCODE_UP:
             inputs->setP2Shoot(pressed);
-            break;
-        case SDL_SCANCODE_ESCAPE:
-            {
-                SDL_Event e;
-                e.type = SDL_QUIT;
-                SDL_PushEvent(&e);
-            }
             break;
         default:
             break;
