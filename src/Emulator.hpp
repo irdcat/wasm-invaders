@@ -21,8 +21,8 @@ class Emulator
         void run();
 
     private:
-        void initializeSdlResources();
-        void loadRoms();
+        bool initializeSdlResources();
+        bool loadRoms();
 
         void handleInput();
         void update(uint32_t ms);

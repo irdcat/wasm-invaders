@@ -8,6 +8,8 @@ extern "C"
     {
         Emulator emulator;
         emulator.run();
+        Mix_CloseAudio();
+        SDL_Quit();
         return 0;
     }
 }
