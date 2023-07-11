@@ -1,6 +1,26 @@
 # wasm-invaders
 
-## Local development
+## Description
+
+Space invaders emulator compiled to WebAssembly.
+
+![Emulator Screen](images/emulator.png)
+
+## Controls
+
+- **C** - Insert Coin
+- **1** - Select 1 Player
+- **2** - Select 2 Players
+
+- **W** - Player 1 Shoot
+- **A** - Player 1 Left
+- **D** - Player 1 Right
+
+- **↑** - Player 2 Shoot
+- **←** - Player 2 Left
+- **→** - Player 2 Right
+
+## How to run
 
 Prequisites:
 - emscripten
@@ -8,38 +28,24 @@ Prequisites:
 - make
 - cmake
 
-### Installing http-server
+**Install http-server from npm**
 
 ```
 npm install -g http-server
 ```
 
-## Emulator
-
-### Building
+**Build the emulator**
 
 ```
-.\build.ps1
+.\build
 ```
 
-### Serving generated page
+**Serve built files on a local server**
 
 ```
-http-server ./
+http-server build
 ```
 
-## Building & Running tests
+**Open application in web browser**
 
-### Building
-
-Building tests
-```
-.\build-tests.ps1
-```
-
-### Running
-
-Running tests
-```
-.\run-tests.ps1
-```
+Open *localhost:8080* in web browser
