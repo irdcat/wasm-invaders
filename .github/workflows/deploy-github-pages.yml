@@ -2,7 +2,7 @@ name: Deploy Github Pages
 
 on:
   push:
-    branches: [master, dev/39]
+    branches: [master]
 
   workflow_dispatch:
 
@@ -34,12 +34,12 @@ jobs:
         run: | 
           chmod +x build.sh
           ./build.sh
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-artifact@master
         with:
-          path: './build'
+          name: page
+          path: build
+          if-no-files-found: error
   deploy:
     needs: build
     environment:
@@ -47,6 +47,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@master
+        with:
+          name: page
+          path: .
+      - name: Configure Pages
+        uses: actions/configure-pages@v2
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: .
       - name: Deploy to Github Pages
         id: deployment
         uses: actions/deploy-pages@v1
