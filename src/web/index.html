@@ -15,6 +15,51 @@
             </div>
             <div id="emulator-container" style="display: none">
                 <canvas oncontextmenu="event.preventDefault()" id="canvas" width="448" height="512" class="bg-gray-950"></canvas>
+                <div class="collapse collapse-arrow  mt-2 p-0 bg-slate-900">
+                    <input type="checkbox"/>
+                    <div class="collapse-title text-xl font-medium">
+                        Controls
+                    </div>
+                    <div class="collapse-content">
+                        <div class="flex gap-x-3 justify-center mt-1">
+                            <div class="grow-0 p-2 border-solid border-2 border-slate-300">
+                                <div>
+                                    <kbd class="kbd">W</kbd> - Player 1 Shoot
+                                </div>
+                                <div>
+                                    <kbd class="kbd">A</kbd> - Player 1 Left
+                                </div>
+                                <div>
+                                    <kbd class="kbd">D</kbd> - Player 1 Right
+                                </div>
+                            </div>
+                            <div class="grow-0 p-2 border-solid border-2 border-slate-300">
+                                <div>
+                                    <kbd class="kbd">↑</kbd> - Player 2 Shoot
+                                </div>
+                                <div>
+                                    <kbd class="kbd">←</kbd> - Player 2 Left
+                                </div>
+                                <div>
+                                    <kbd class="kbd">→</kbd> - Player 2 Right
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-3">
+                            <div class="grow-0 p-2 border-solid border-2 border-slate-300">   
+                                <div>
+                                    <kbd class="kbd">C</kbd> - Insert Coin
+                                </div>
+                                <div>
+                                    <kbd class="kbd">1</kbd> - Select 1 Player
+                                </div>
+                                <div>
+                                    <kbd class="kbd">2</kbd> - Select 2 Player
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <script src="index.js"></script>
