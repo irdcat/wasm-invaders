@@ -7,6 +7,8 @@ class ShiftRegister
     public:
         virtual ~ShiftRegister() = default;
 
+        virtual void reset() = 0;
+
         virtual u8 readShiftResult() const = 0;
 
         virtual void writeShiftOffset(u8 value) = 0;

@@ -7,6 +7,8 @@ class Inputs
     public:
         virtual ~Inputs() = default;
 
+        virtual void reset() = 0;
+
         virtual u8 getInput(unsigned index) = 0;
 
         virtual void setCredit(bool deposit) = 0;

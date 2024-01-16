@@ -28,12 +28,17 @@ Emulator::Emulator()
     });
     bus = std::make_shared<BusImpl>(memory, inputs, apu, shiftRegister);
     cpu = std::make_shared<CpuImpl>(bus);
-
-    shouldRun = initializeSdlResources() && loadRoms();
 }
 
-Emulator::~Emulator()
+void Emulator::reset()
 {
+    cpu->reset();
+    apu->reset();
+    memory->reset();
+    inputs->reset();
+    shiftRegister->reset();
+
+    shouldRun = initializeSdlResources(!shouldRun) && loadRoms();
 }
 
 void Emulator::run()
@@ -55,8 +60,25 @@ void Emulator::run()
     }
 }
 
-bool Emulator::initializeSdlResources()
+u16 Emulator::exportHiScoreData()
 {
+    const u16 hiScoreAddress = 0x20F4;
+    return static_cast<u16>(memory->read(hiScoreAddress)) |
+        static_cast<u16>(memory->read(hiScoreAddress + 1)) << 8;
+}
+
+void Emulator::importHiScoreData(u16 hiScore)
+{
+    const u16 hiScoreAddress = 0x1BF4;
+    memory->write(hiScoreAddress, hiScore & 0xFF);
+    memory->write(hiScoreAddress + 1, (hiScore >> 8) & 0xFF);
+}
+
+bool Emulator::initializeSdlResources(bool initSdlResources)
+{
+    if(!initSdlResources)
+        return true;
+
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         return false;
     }

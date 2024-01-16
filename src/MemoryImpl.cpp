@@ -1,4 +1,14 @@
 #include "MemoryImpl.hpp"
+#include <algorithm>
+
+void MemoryImpl::reset()
+{
+    auto clear = [](auto& n){ n = 0x00; };
+
+    std::for_each(rom.begin(), rom.end(), clear);
+    std::for_each(ram.begin(), ram.end(), clear);
+    std::for_each(vram.begin(), vram.end(), clear);
+}
 
 u8 MemoryImpl::read(u16 addr) const
 {
