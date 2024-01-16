@@ -5,9 +5,11 @@
 class ShiftRegisterImpl : public ShiftRegister
 {
     public:
-        ShiftRegisterImpl();
+        ShiftRegisterImpl() = default;
 
         ~ShiftRegisterImpl() = default;
+
+        void reset() override;
 
         u8 readShiftResult() const override;
 

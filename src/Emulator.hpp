@@ -16,12 +16,18 @@ class Emulator
     public:
         Emulator();
 
-        ~Emulator();
+        ~Emulator() = default;
+
+        void reset();
 
         void run();
 
+        u16 exportHiScoreData();
+
+        void importHiScoreData(u16 hiScore);
+
     private:
-        bool initializeSdlResources();
+        bool initializeSdlResources(bool initSdlResources);
         bool loadRoms();
 
         void handleInput();

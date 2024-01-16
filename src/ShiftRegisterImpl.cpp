@@ -1,10 +1,10 @@
 #include "ShiftRegisterImpl.hpp"
 
-ShiftRegisterImpl::ShiftRegisterImpl()
-    : shift_low(0x00)
-    , shift_high(0x00)
-    , shift_offset(0x00)
+void ShiftRegisterImpl::reset()
 {
+    shift_low = 0x00;
+    shift_high = 0x00;
+    shift_offset = 0x00;
 }
 
 u8 ShiftRegisterImpl::readShiftResult() const

@@ -1,6 +1,6 @@
 #include "InputsImpl.hpp"
 
-InputsImpl::InputsImpl()
+void InputsImpl::reset()
 {
     input1.raw = 1 << 3;
     input2.raw = 0;

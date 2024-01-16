@@ -5,9 +5,11 @@
 class InputsImpl : public Inputs
 {
     public:
-        InputsImpl();
+        InputsImpl() = default;
 
         ~InputsImpl() = default;
+
+        void reset() override;
 
         u8 getInput(unsigned index) override;
 

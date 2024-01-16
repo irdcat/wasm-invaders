@@ -10,6 +10,8 @@ class ApuImpl : public Apu
 
         explicit ApuImpl(AudioPlayCallback audioPlayCallback);
 
+        void reset() override;
+
         ~ApuImpl() = default;
 
         void write(unsigned bank, u8 value) override;

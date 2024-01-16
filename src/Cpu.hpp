@@ -7,6 +7,8 @@ class Cpu
     public:
         virtual ~Cpu() = default;
 
+        virtual void reset() = 0;
+
         virtual u8 fetchOpcode() = 0;
 
         virtual Registers& getRegisters() = 0;

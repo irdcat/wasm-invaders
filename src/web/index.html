@@ -2,20 +2,28 @@
 <html>
     <head>
         <meta charset="utf-8"/>
-        <link href="https://cdn.jsdelivr.net/npm/daisyui@3.2.1/dist/full.css" rel="stylesheet" type="text/css"/>
         <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@3.2.1/dist/full.css" rel="stylesheet" type="text/css"/>
     </head>
-    <body class="m-0 p-0 bg-slate-900">
+    <body class="m-0 p-0 bg-slate-400">
         <div class="p-2 m-0 absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 box-border bg-slate-300 rounded-xl">
             <div id="loading-container">
                 <span class="loading loading-spinner loading-lg text-accent"></span>
             </div>
             <div id="run-button-container" style="display: none">
-                <button onclick="run_emulator()" type="button" class="btn btn-sm btn-accent">Run</button>
+                <button onclick="run_emulator()" type="button" class="btn btn-sm btn-primary">Run</button>
             </div>
             <div id="emulator-container" style="display: none">
+                <div class="flex mb-2 p-2 rounded-2xl bg-slate-900">
+                    <div class="grow">
+                        <button onclick="reset_emulator()" type="button" class="btn btn-sm btn-primary">Reset</button>
+                    </div>
+                    <div class="grow">
+                        <button onclick="export_hiscore()" type="button" class="btn btn-sm btn-primary">Save Hi-Score</button>
+                    </div>
+                </div>
                 <canvas oncontextmenu="event.preventDefault()" id="canvas" width="448" height="512" class="bg-gray-950"></canvas>
-                <div class="collapse collapse-arrow  mt-2 p-0 bg-slate-900">
+                <div class="collapse collapse-arrow mt-2 p-0 bg-slate-900">
                     <input type="checkbox"/>
                     <div class="collapse-title text-xl font-medium">
                         Controls

@@ -5,6 +5,11 @@
 ApuImpl::ApuImpl(AudioPlayCallback audioPlayCallback)
     : audioPlayCallback(audioPlayCallback)
 {
+    reset();
+}
+
+void ApuImpl::reset()
+{
     sound1.raw = 0x00;
     sound2.raw = 0x00;
 }

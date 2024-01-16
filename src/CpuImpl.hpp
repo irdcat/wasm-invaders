@@ -13,6 +13,8 @@ class CpuImpl : public Cpu
 
         ~CpuImpl() = default;
 
+        void reset() override;
+
         u8 fetchOpcode() override;
 
         Registers& getRegisters() override;

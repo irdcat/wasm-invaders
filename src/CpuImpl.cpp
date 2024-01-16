@@ -6,15 +6,28 @@
 CpuImpl::CpuImpl(const std::shared_ptr<Bus>& busPtr)
     : registers()
     , bus(busPtr)
-    , interrupt_enable(false)
-    , interrupt_delay(false)
-    , interrupt_pending(false)
-    , interrupt_source(0x00)
-    , halted(false)
-    , cycles(0)
 {
-    auto& rawFlags = registers.getAf().getLow().raw;
-    rawFlags = 0x2; // Set bit between Carry and Parity to 1
+    reset();
+}
+
+void CpuImpl::reset()
+{
+    auto& af = registers.getAf();
+    auto& bc = registers.getBc();
+    auto& de = registers.getDe();
+    auto& hl = registers.getHl();
+    auto& pc = registers.getPc();
+    auto& sp = registers.getSp();
+
+    af = bc = de = hl = pc = sp = 0;
+    af.getLow().raw = 0x2; // Set bit between Carry and Parity to 1
+
+    cycles = 0;
+    halted = false;
+    interrupt_enable = false;
+    interrupt_delay = false;
+    interrupt_pending = false;
+    interrupt_source = 0x00;
 }
 
 u8 CpuImpl::fetchOpcode()
