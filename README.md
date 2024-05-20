@@ -31,19 +31,20 @@ Prequisites:
 **Install http-server from npm**
 
 ```
+npm install
 npm install -g http-server
 ```
 
 **Build the emulator**
 
 ```
-.\build
+.\build.sh
 ```
 
 **Serve built files on a local server**
 
 ```
-http-server build
+http-server ./build -p8080 -c-1
 ```
 
 **Open application in web browser**
