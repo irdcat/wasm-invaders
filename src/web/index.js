@@ -12,9 +12,6 @@ var Module = {
         loadingContainer.style.display = 'none';
         let runButtonContainer = document.getElementById(RUN_BUTTON_CONTAINER_ID);
         runButtonContainer.style.display = 'block';
-
-        let daisyUiStylesheet = document.querySelector("link");
-        document.querySelector("head").appendChild(daisyUiStylesheet);
     },
     canvas: (function() {
         let canvas = document.getElementById(CANVAS_ID);

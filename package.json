@@ -1,0 +1,11 @@
+{
+  "name": "wasm-invaders",
+  "version": "1.2.0",
+  "description": "Space invaders emulator compiled to WebAssembly",
+  "author": "irdcat <kamil.adamiec97@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "daisyui": "^4.11.1",
+    "tailwindcss": "^3.4.3"
+  }
+}
