@@ -20,33 +20,44 @@ Space invaders emulator compiled to WebAssembly.
 - **←** - Player 2 Left
 - **→** - Player 2 Right
 
-## How to run
+## Local Development
 
-Prequisites:
-- emscripten
-- node
+### Prerequisites 
+
+- [emscripten](https://emscripten.org/docs/getting_started/downloads.html)
+- [node](https://nodejs.org/en/download)
 - make
-- cmake
+- [cmake](https://cmake.org/)
 
-**Install http-server from npm**
+### Running locally
+
+In order to run the application locally, application must be hosted on a server, because browsers are forbidding loading wasm files from the disk.
+
+#### Install http-server from npm
+
+In this document, tool used to host files on a local server is a **http-server** from NPM.
 
 ```
-npm install
 npm install -g http-server
 ```
 
-**Build the emulator**
+#### Build the emulator
+
+Scripts included in the project handle things like building Cpp sources into binaries and handling NPM dependencies (like TailwindCSS used in the project).
+After building all of the required files are put in the `./build` directory.
 
 ```
 .\build.sh
 ```
 
-**Serve built files on a local server**
+#### Serve built files on a local server
+
+Command below serves directory with built files at port 8080.
 
 ```
 http-server ./build -p8080 -c-1
 ```
 
-**Open application in web browser**
+#### Open application in web browser
 
 Open *localhost:8080* in web browser
